@@ -2,7 +2,7 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>PIRLS 2026 — Force cards</title>
+		<title>PIRLS 2026 Participants</title>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
@@ -23,6 +23,29 @@
 				background: #fdfdfd;
 				color: #333;
 			}
+			.header {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				padding: 12px 24px 0;
+				font-size: 1.2rem;
+				font-family: "lato", sans-serif;
+				font-weight: 300;
+				letter-spacing: 0.02em;
+				color: #333;
+			}
+			.header .brand {
+				font-family:
+					"Canela",
+					Iowan Old Style,
+					Times New Roman,
+					Times,
+					serif;
+				color: var(--dominant);
+				font-weight: 800;
+				font-size: 3rem;
+			}
 			#viz {
 				width: 100%;
 				height: calc(100vh - 130px);
@@ -42,9 +65,12 @@
 			#filter-bar {
 				display: flex;
 				align-items: center;
+				justify-content: center;
 				gap: 10px;
 				padding: 10px 24px 12px;
 				flex-wrap: wrap;
+				max-width: 800px;
+				margin: 0 auto;
 			}
 			#filter-bar span {
 				padding: 6px 14px;
@@ -98,10 +124,12 @@
 			}
 			#tooltip.visible.selected .card {
 				pointer-events: auto;
+				min-height: 50vh;
 			}
 			#tooltip .card {
 				width: 100%;
 				min-height: 300px;
+				transition: min-height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
 				background: rgba(255, 255, 255, 0.92);
 				backdrop-filter: blur(16px);
 				-webkit-backdrop-filter: blur(16px);
@@ -116,22 +144,52 @@
 				justify-content: center;
 				text-align: center;
 			}
+			#tooltip .card .flag-holder {
+				margin-bottom: 12px;
+				min-height: 0;
+			}
+			#tooltip .card .flag-holder:empty {
+				display: none;
+			}
+			#tooltip .card .flag-holder img {
+				width: 64px;
+				height: 48px;
+				object-fit: cover;
+				border-radius: 4px;
+				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+			}
+			#tooltip.visible.selected .card .flag-holder img {
+				width: 88px;
+				height: 66px;
+			}
 			#tooltip .card .name {
 				font-size: 1.4rem;
 				font-weight: 600;
 				color: #1a1a1a;
 				margin-bottom: 8px;
+				transition: font-size 0.4s ease;
+			}
+			#tooltip.visible.selected .card .name {
+				font-size: 1.9rem;
 			}
 			#tooltip .card .cycles {
 				font-size: 0.95rem;
 				color: #555;
 				margin-bottom: 8px;
+				transition: font-size 0.4s ease;
+			}
+			#tooltip.visible.selected .card .cycles {
+				font-size: 1.15rem;
 			}
 			#tooltip .card .langs {
 				font-size: 1rem;
 				color: #444;
 				font-style: italic;
 				line-height: 1.6;
+				transition: font-size 0.4s ease;
+			}
+			#tooltip.visible.selected .card .langs {
+				font-size: 1.2rem;
 			}
 			#tooltip .link-holder {
 				margin-top: 12px;
@@ -169,9 +227,10 @@
 		</style>
 	</head>
 	<body>
-		<header style="padding: 12px 24px 0; font-size: 0.85rem; font-weight: 400; letter-spacing: 0.02em; color: #666">
-			PIRLS 2026 participating countries · shape = # of languages · drag to move
-		</header>
+		<div class="header">
+			<span class="brand">PIRLS 2026 Participants</span>
+			shape = # of languages · drag to move
+		</div>
 		<div id="filter-bar">
 			<span data-cycle="all" class="on">All</span>
 			<span data-cycle="P21">P21</span>
@@ -180,12 +239,13 @@
 			<span data-cycle="P11">P11</span>
 			<span data-cycle="P06">P06</span>
 			<span data-cycle="P01">P01</span>
-			<label for="search" style="margin-left: auto; margin-right: 8px; font-size: 0.85rem; color: #555">Search</label>
+			<label for="search" style="margin-left: 24px; margin-right: 8px; font-size: 0.85rem; color: #555">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
 		</div>
 		<div id="viz"></div>
 		<div id="tooltip">
 			<div class="card">
+				<div class="flag-holder"></div>
 				<div class="name"></div>
 				<div class="cycles"></div>
 				<div class="langs"></div>
@@ -217,6 +277,74 @@
 					}
 
 					const DATA = RAW.map((r) => ({ ...parse(r), _raw: r }));
+
+					const COUNTRY_TO_ISO = {
+						Albania: "al",
+						Austria: "at",
+						Australia: "au",
+						Azerbaijan: "az",
+						Bahrain: "bh",
+						"Belgium (Flemish)": "be",
+						"Belgium (French)": "be",
+						Brazil: "br",
+						Bulgaria: "bg",
+						Canada: "ca",
+						"Ontario, Canada": "ca",
+						"Quebec, Canada": "ca",
+						"Chinese Taipei": "tw",
+						Cyprus: "cy",
+						"Czech Republic": "cz",
+						Denmark: "dk",
+						England: "gb",
+						Finland: "fi",
+						France: "fr",
+						Georgia: "ge",
+						Germany: "de",
+						"Hong Kong SAR": "hk",
+						Hungary: "hu",
+						"Iran, Islamic Rep. of": "ir",
+						Ireland: "ie",
+						Israel: "il",
+						Italy: "it",
+						Jordan: "jo",
+						Kazakhstan: "kz",
+						"Korea, Rep. of": "kr",
+						Kuwait: "kw",
+						Latvia: "lv",
+						Lithuania: "lt",
+						"Macao SAR": "mo",
+						Malta: "mt",
+						Montenegro: "me",
+						Morocco: "ma",
+						Netherlands: "nl",
+						"New Zealand": "nz",
+						"North Macedonia": "mk",
+						"Northern Ireland": "gb",
+						Norway: "no",
+						Oman: "om",
+						Poland: "pl",
+						Portugal: "pt",
+						Qatar: "qa",
+						Romania: "ro",
+						"Saudi Arabia": "sa",
+						"Saudi Arabia (RCJY)": "sa",
+						Scotland: "gb",
+						"South Africa": "za",
+						Serbia: "rs",
+						Singapore: "sg",
+						"Slovak Republic": "sk",
+						Slovenia: "si",
+						Spain: "es",
+						Sweden: "se",
+						Tajikistan: "tj",
+						"United Arab Emirates": "ae",
+						"Abu Dhabi, UAE": "ae",
+						"Dubai, UAE": "ae",
+						"Sharjah, UAE": "ae",
+						Uzbekistan: "uz",
+						Wales: "gb",
+					};
+
 					let state = { cycleFilter: "all", selectedId: null, search: "" };
 
 					function filteredData() {
@@ -325,15 +453,14 @@
 					}
 
 					const fillScale = d3
-						.scaleOrdinal(["#e8e6e4", "#e5e0dc", "#e8ddd9", "#ead8d4", "#edd2cd", "#efcbc5", "rgba(184,55,38,0.18)"])
+						.scaleOrdinal(["#fdf2f1", "#f9e4e1", "#f2d0cb", "#eab8b0", "#df9a8f", "#d07866", "rgba(184,55,38,0.35)"])
 						.domain([0, 1, 2, 3, 4, 5, 6]);
 
-					const SHAPES = ["card", "circle", "diamond"];
+					const SHAPES = ["card", "circle"];
 					function shapeFor(d) {
 						const n = d.langCount || 0;
-						if (n <= 1) return "card";
-						if (n === 2) return "circle";
-						return "diamond";
+						if (n === 1) return "circle";
+						return "card";
 					}
 					function nodeRadius(d) {
 						const r = 28 + d.cycleCount * 1;
@@ -391,24 +518,10 @@
 								g2.append("text")
 									.attr("text-anchor", "middle")
 									.attr("dy", "0.35em")
-									.style("font-size", "11px")
-									.style("fill", "#333")
-									.style("font-weight", 600)
-									.text(d.name.length > 12 ? d.name.slice(0, 11) + "…" : d.name);
-							} else if (d.shape === "diamond") {
-								const s = d.radiusCircle * 1.2;
-								g2.append("path")
-									.attr("d", "M0," + -s + " L" + s + ",0 0," + s + " " + -s + ",0 Z")
-									.attr("fill", fillScale(d.cycleCount))
-									.attr("stroke", "rgba(184,55,38,0.2)")
-									.attr("stroke-width", 1);
-								g2.append("text")
-									.attr("text-anchor", "middle")
-									.attr("dy", "0.35em")
-									.style("font-size", "10px")
-									.style("fill", "#333")
-									.style("font-weight", 600)
-									.text(d.name.length > 10 ? d.name.slice(0, 9) + "…" : d.name);
+									.style("font-size", "13px")
+									.style("fill", "#0d0d0d")
+									.style("font-weight", 700)
+									.text(d.name.length > 8 ? d.name.slice(0, 7) + "…" : d.name);
 							} else {
 								const w2 = d.cardW / 2;
 								const h2 = d.cardH / 2;
@@ -424,25 +537,25 @@
 									.attr("stroke-width", 1);
 								g2.append("text")
 									.attr("text-anchor", "middle")
-									.attr("dy", "-0.3em")
-									.style("font-size", "12px")
-									.style("fill", "#333")
-									.style("font-weight", 600)
+									.attr("dy", "0.35em")
+									.style("font-size", "13px")
+									.style("fill", "#0d0d0d")
+									.style("font-weight", 700)
 									.text(d.name);
-								g2.append("text")
-									.attr("text-anchor", "middle")
-									.attr("dy", "0.9em")
-									.style("font-size", "9px")
-									.style("fill", "#555")
-									.text(
-										d.cycleCount +
-											" cycle" +
-											(d.cycleCount !== 1 ? "s" : "") +
-											" · " +
-											d.langCount +
-											" lang" +
-											(d.langCount !== 1 ? "s" : ""),
-									);
+								// g2.append("text")
+								// 	.attr("text-anchor", "middle")
+								// 	.attr("dy", "0.9em")
+								// 	.style("font-size", "9px")
+								// 	.style("fill", "#333")
+								// 	.text(
+								// 		d.cycleCount +
+								// 			" cycle" +
+								// 			(d.cycleCount !== 1 ? "s" : "") +
+								// 			" · " +
+								// 			d.langCount +
+								// 			" lang" +
+								// 			(d.langCount !== 1 ? "s" : ""),
+								// 	);
 							}
 						});
 
@@ -455,6 +568,17 @@
 							ttName.textContent = d.name;
 							ttCycles.textContent = "Participation: " + (d.cycles.length ? d.cycles.join(", ") : "—");
 							ttLangs.innerHTML = nativeLabel(d) || "—";
+							const flagEl = tooltip.querySelector(".flag-holder");
+							if (isSelected) {
+								const code = COUNTRY_TO_ISO[d.name];
+								if (code) {
+									flagEl.innerHTML = '<img src="https://flagcdn.com/w160/' + code + '.png" alt="" />';
+								} else {
+									flagEl.innerHTML = "";
+								}
+							} else {
+								flagEl.innerHTML = "";
+							}
 							tooltip.classList.add("visible");
 							tooltip.classList.toggle("selected", !!isSelected);
 						}
@@ -473,11 +597,13 @@
 								e.stopPropagation();
 								state.selectedId = state.selectedId === d.id ? null : d.id;
 								g.classed("dimmed", (n) => state.selectedId !== null && n.id !== state.selectedId);
+								g.classed("selected", (n) => n.id === state.selectedId);
 								if (state.selectedId) {
 									const sel = DATA.find((r) => r.id === state.selectedId);
 									showTooltip(sel, true);
 								} else {
 									tooltip.classList.remove("visible", "selected");
+									g.classed("selected", false);
 								}
 							});
 
@@ -506,15 +632,19 @@
 								d3.forceCollide().radius((d) => d.radius),
 							)
 							.force("x", d3.forceX(w / 2).strength(0.01))
-							.force("y", d3.forceY(h / 2.2).strength(0.05))
+							.force("y", d3.forceY(h / 2.8).strength(0.05))
 							.on("tick", () => {
-								g.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+								g.attr("transform", (d) => {
+									const s = d.id === state.selectedId ? 1.2 : 1;
+									return "translate(" + d.x + "," + d.y + ")" + (s > 1 ? " scale(" + s + ")" : "");
+								});
 							});
 
 						svg.on("click", function (e) {
 							if (e.target === this || d3.select(e.target).classed("viz-bg")) {
 								state.selectedId = null;
 								g.classed("dimmed", false);
+								g.classed("selected", false);
 								tooltip.classList.remove("visible", "selected");
 							}
 						});
