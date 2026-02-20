@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>PIRLS 2026 — Force cards</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
+			rel="stylesheet" />
+		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+		<style>
+			:root {
+				--dominant: #b83726;
+			}
+			* {
+				box-sizing: border-box;
+			}
+			body {
+				margin: 0;
+				min-height: 100vh;
+				font-family: "Source Serif 4", Georgia, serif;
+				background: #fdfdfd;
+				color: #333;
+			}
+			#viz {
+				width: 100%;
+				height: calc(100vh - 130px);
+			}
+			#viz .node {
+				cursor: grab;
+			}
+			#viz .node:active {
+				cursor: grabbing;
+			}
+			#viz .card {
+				transition: filter 1.5s;
+			}
+			#viz .node:hover .card {
+				filter: brightness(0.97);
+			}
+			#filter-bar {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+				padding: 10px 24px 12px;
+				flex-wrap: wrap;
+			}
+			#filter-bar span {
+				padding: 6px 14px;
+				border-radius: 8px;
+				font-size: 0.85rem;
+				cursor: pointer;
+				background: #f0f0f0;
+				color: #555;
+				border: 1px solid #e0e0e0;
+				transition: all 0.15s;
+			}
+			#filter-bar span:hover {
+				background: #e8e8e8;
+				color: #222;
+			}
+			#filter-bar span.on {
+				background: rgba(184, 55, 38, 0.12);
+				color: var(--dominant);
+				border-color: rgba(184, 55, 38, 0.35);
+			}
+			#filter-bar input#search {
+				padding: 6px 12px;
+				font-family: inherit;
+				font-size: 0.85rem;
+				border: 1px solid #e0e0e0;
+				border-radius: 8px;
+				background: #fff;
+				color: #333;
+				width: 160px;
+			}
+			#filter-bar input#search:focus {
+				outline: none;
+				border-color: var(--dominant);
+			}
+			#tooltip {
+				position: fixed;
+				left: 40%;
+				right: 0;
+				bottom: 0;
+				width: 20%;
+				pointer-events: none;
+				z-index: 100;
+				transform: translateY(100%);
+				transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+			}
+			#tooltip.visible {
+				transform: translateY(0);
+			}
+			#tooltip.visible .card {
+				pointer-events: none;
+			}
+			#tooltip.visible.selected .card {
+				pointer-events: auto;
+			}
+			#tooltip .card {
+				width: 100%;
+				min-height: 300px;
+				background: rgba(255, 255, 255, 0.92);
+				backdrop-filter: blur(16px);
+				-webkit-backdrop-filter: blur(16px);
+				border-top: 1px solid rgba(184, 55, 38, 0.25);
+				padding: 28px 48px 32px;
+				box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.08);
+				box-sizing: border-box;
+				border-radius: 60px 60px 0 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+			}
+			#tooltip .card .name {
+				font-size: 1.4rem;
+				font-weight: 600;
+				color: #1a1a1a;
+				margin-bottom: 8px;
+			}
+			#tooltip .card .cycles {
+				font-size: 0.95rem;
+				color: #555;
+				margin-bottom: 8px;
+			}
+			#tooltip .card .langs {
+				font-size: 1rem;
+				color: #444;
+				font-style: italic;
+				line-height: 1.6;
+			}
+			#tooltip .link-holder {
+				margin-top: 12px;
+				width: 100%;
+				max-width: 400px;
+			}
+			#tooltip .link-holder label {
+				display: block;
+				font-size: 0.8rem;
+				color: var(--dominant);
+				margin-bottom: 6px;
+			}
+			#tooltip .link-holder input {
+				width: 100%;
+				padding: 8px 10px;
+				font-family: inherit;
+				font-size: 0.9rem;
+				border: 1px solid #ddd;
+				border-radius: 6px;
+				color: #333;
+				background: #fff;
+				box-sizing: border-box;
+			}
+			#tooltip .link-holder input::placeholder {
+				color: #999;
+			}
+			#tooltip .link-holder input:focus {
+				outline: none;
+				border-color: var(--dominant);
+			}
+			#viz g.node.dimmed {
+				opacity: 0.25;
+				pointer-events: none;
+			}
+		</style>
+	</head>
+	<body>
+		<header style="padding: 12px 24px 0; font-size: 0.85rem; font-weight: 400; letter-spacing: 0.02em; color: #666">
+			PIRLS 2026 participating countries · shape = # of languages · drag to move
+		</header>
+		<div id="filter-bar">
+			<span data-cycle="all" class="on">All</span>
+			<span data-cycle="P21">P21</span>
+			<span data-cycle="P21 Delayed">P21 Delayed</span>
+			<span data-cycle="P16">P16</span>
+			<span data-cycle="P11">P11</span>
+			<span data-cycle="P06">P06</span>
+			<span data-cycle="P01">P01</span>
+			<label for="search" style="margin-left: auto; margin-right: 8px; font-size: 0.85rem; color: #555">Search</label>
+			<input type="text" id="search" placeholder="Country name..." />
+		</div>
+		<div id="viz"></div>
+		<div id="tooltip">
+			<div class="card">
+				<div class="name"></div>
+				<div class="cycles"></div>
+				<div class="langs"></div>
+				<div class="country-link"><a href="">See Individual Country Page</a></div>
+			</div>
+		</div>
+
+		<script>
+			d3.csv("CountryInfoforMap.csv")
+				.then(function (RAW) {
+					function parse(r) {
+						const cycles = [];
+						if (r["Participated P21 "] === "X") cycles.push("P21");
+						if (r["Participated P21 Delayed"] === "X") cycles.push("P21 Delayed");
+						if (r["Participated P16"] === "X") cycles.push("P16");
+						if (r["Participated P11"] === "X") cycles.push("P11");
+						if (r["Participated P06"] === "X") cycles.push("P06");
+						if (r["Participated P01"] === "X") cycles.push("P01");
+						const langStr = (r["P26 Assessment Languages"] || "").trim();
+						const languages = langStr ? langStr.split(/\s*,\s*/) : [];
+						return {
+							id: r.Country.replace(/\s+/g, "-").replace(/[(),]/g, ""),
+							name: r.Country,
+							cycles,
+							cycleCount: cycles.length,
+							languages,
+							langCount: languages.length,
+						};
+					}
+
+					const DATA = RAW.map((r) => ({ ...parse(r), _raw: r }));
+					let state = { cycleFilter: "all", selectedId: null, search: "" };
+
+					function filteredData() {
+						let list = state.cycleFilter === "all" ? DATA : DATA.filter((d) => d.cycles.includes(state.cycleFilter));
+						if (state.search.trim()) {
+							const q = state.search.trim().toLowerCase();
+							list = list.filter((d) => d.name.toLowerCase().includes(q));
+						}
+						return list;
+					}
+
+					// Country name in its assessment language(s) — native form for tooltip
+					const NATIVE_NAMES = {
+						Albania: { Albanian: "Shqipëria" },
+						Australia: { English: "Australia" },
+						Austria: { German: "Österreich" },
+						Azerbaijan: { Azerbaijani: "Azərbaycan", Russian: "Азербайджан" },
+						Bahrain: { Arabic: "البحرين", English: "Bahrain" },
+						"Belgium (Flemish)": { Dutch: "België" },
+						"Belgium (French)": { French: "Belgique" },
+						Brazil: { Portuguese: "Brasil" },
+						Bulgaria: { Bulgarian: "България" },
+						Canada: { English: "Canada", French: "Canada" },
+						Chile: { Spanish: "Chile" },
+						China: { Chinese: "中国" },
+						Colombia: { Spanish: "Colombia" },
+						Croatia: { Croatian: "Hrvatska" },
+						Cyprus: { Greek: "Κύπρος", English: "Cyprus" },
+						"Czech Republic": { Czech: "Česko" },
+						Denmark: { Danish: "Danmark" },
+						"Dominican Republic": { Spanish: "República Dominicana" },
+						Egypt: { Arabic: "مصر" },
+						Estonia: { Estonian: "Eesti" },
+						Finland: { Finnish: "Suomi", Swedish: "Finland" },
+						France: { French: "France" },
+						Georgia: { Georgian: "საქართველო" },
+						Germany: { German: "Deutschland" },
+						Greece: { Greek: "Ελλάδα", English: "Greece" },
+						"Hong Kong": { Chinese: "香港" },
+						Hungary: { Hungarian: "Magyarország" },
+						Iceland: { Icelandic: "Ísland" },
+						Indonesia: { Indonesian: "Indonesia" },
+						Iran: { Persian: "ایران" },
+						Ireland: { English: "Ireland", Irish: "Éire" },
+						Israel: { Arabic: "إسرائيل", Hebrew: "ישראל" },
+						Italy: { Italian: "Italia" },
+						Japan: { Japanese: "日本" },
+						Jordan: { Arabic: "الأردن" },
+						Kazakhstan: { Kazakh: "Қазақстан", Russian: "Казахстан" },
+						Korea: { Korean: "한국" },
+						Kosovo: { Albanian: "Kosova", Serbian: "Косово" },
+						Latvia: { Latvian: "Latvija", Russian: "Латвия" },
+						Lebanon: { Arabic: "لبنان" },
+						Lithuania: { Lithuanian: "Lietuva", Polish: "Litwa", Russian: "Литва" },
+						"Macao SAR": { Chinese: "澳門", English: "Macao", Portuguese: "Macau" },
+						Malta: { English: "Malta", Maltese: "Malta" },
+						Montenegro: { Montenegrin: "Crna Gora" },
+						Morocco: { Arabic: "المغرب" },
+						Netherlands: { Dutch: "Nederland" },
+						"New Zealand": { English: "New Zealand", Māori: "Aotearoa" },
+						"North Macedonia": { Albanian: "Maqedonia e Veriut", Macedonian: "Северна Македонија" },
+						"Northern Ireland": { English: "Northern Ireland" },
+						Norway: { Bokmal: "Norge", Nynorsk: "Noreg", English: "Norway" },
+						Oman: { Arabic: "عمان", English: "Oman" },
+						Poland: { Polish: "Polska", Ukrainian: "Польща" },
+						Portugal: { Portuguese: "Portugal" },
+						Qatar: { Arabic: "قطر", English: "Qatar" },
+						Romania: { Romanian: "România" },
+						"Saudi Arabia": { Arabic: "السعودية", English: "Saudi Arabia" },
+						"Saudi Arabia (RCJY)": { Arabic: "السعودية", English: "Saudi Arabia" },
+						Scotland: { English: "Scotland" },
+						Serbia: { Serbian: "Србија" },
+						Singapore: { Chinese: "新加坡", English: "Singapore", Malay: "Singapura", Tamil: "சிங்கப்பூர்" },
+						"Slovak Republic": { Hungarian: "Szlovákia", Slovak: "Slovensko" },
+						Slovenia: { Slovenian: "Slovenija" },
+						"South Africa": {
+							English: "South Africa",
+							Afrikaans: "Suid-Afrika",
+							IsiXhosa: "iMzanzi Afrika",
+							IsiZulu: "iNingizimu Afrika",
+						},
+						Spain: {
+							Basque: "Espainia",
+							Catalan: "Espanya",
+							Galician: "España",
+							Spanish: "España",
+							Valencian: "Espanya",
+						},
+						Sweden: { Arabic: "السويد", English: "Sweden", Swedish: "Sverige" },
+						Tajikistan: { Russian: "Таджикистан", Tajik: "Тоҷикистон" },
+						"United Arab Emirates": { Arabic: "الإمارات", English: "United Arab Emirates" },
+						"Abu Dhabi, UAE": { Arabic: "أبوظبي", English: "Abu Dhabi" },
+						Uzbekistan: { Karakalpak: "Qaraqalpaqstan", Russian: "Узбекистан", Uzbek: "Oʻzbekiston" },
+						Wales: { English: "Wales", Welsh: "Cymru" },
+					};
+
+					function nativeLabel(d) {
+						const byLang = NATIVE_NAMES[d.name];
+						return (d.languages || [])
+							.map((lang) => {
+								const L = (lang || "").trim();
+								const native = byLang && byLang[L];
+								return native ? L + ": " + native : L;
+							})
+							.join(" <br> ");
+					}
+
+					const fillScale = d3
+						.scaleOrdinal(["#e8e6e4", "#e5e0dc", "#e8ddd9", "#ead8d4", "#edd2cd", "#efcbc5", "rgba(184,55,38,0.18)"])
+						.domain([0, 1, 2, 3, 4, 5, 6]);
+
+					const SHAPES = ["card", "circle", "diamond"];
+					function shapeFor(d) {
+						const n = d.langCount || 0;
+						if (n <= 1) return "card";
+						if (n === 2) return "circle";
+						return "diamond";
+					}
+					function nodeRadius(d) {
+						const r = 28 + d.cycleCount * 1;
+						return Math.max(r, 36);
+					}
+					function cardSize(d) {
+						const base = 24 + d.cycleCount * 5;
+						return { w: Math.max(d.name.length * 5.5, 70) + base, h: base * 2.2 };
+					}
+
+					let sim = null;
+
+					function runViz() {
+						const el = document.getElementById("viz");
+						const w = Math.max(el.clientWidth || 800, 400);
+						const h = Math.max(el.clientHeight || 500, 300);
+						const list = filteredData();
+
+						const nodes = list.map((d) => {
+							const shape = shapeFor(d);
+							const cs = cardSize(d);
+							const r = nodeRadius(d);
+							return {
+								...d,
+								shape,
+								radius: shape === "card" ? Math.max(cs.w, cs.h) / 2 + 4 : r + 4,
+								cardW: cs.w,
+								cardH: cs.h,
+								radiusCircle: r,
+								x: w / 2 + (Math.random() - 0.5) * w * 0.5,
+								y: h / 2 + (Math.random() - 0.5) * h * 0.5,
+							};
+						});
+
+						d3.select("#viz").selectAll("*").remove();
+						const svg = d3.select("#viz").append("svg").attr("width", w).attr("height", h);
+						svg.append("rect").attr("class", "viz-bg").attr("width", w).attr("height", h).attr("fill", "transparent");
+
+						const g = svg
+							.selectAll("g.node")
+							.data(nodes)
+							.join("g")
+							.attr("class", "node")
+							.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+
+						g.each(function (d) {
+							const sel = d3.select(this);
+							const g2 = sel.append("g").attr("class", "card");
+							if (d.shape === "circle") {
+								g2.append("circle")
+									.attr("r", d.radiusCircle)
+									.attr("fill", fillScale(d.cycleCount))
+									.attr("stroke", "rgba(184,55,38,0.2)")
+									.attr("stroke-width", 1);
+								g2.append("text")
+									.attr("text-anchor", "middle")
+									.attr("dy", "0.35em")
+									.style("font-size", "11px")
+									.style("fill", "#333")
+									.style("font-weight", 600)
+									.text(d.name.length > 12 ? d.name.slice(0, 11) + "…" : d.name);
+							} else if (d.shape === "diamond") {
+								const s = d.radiusCircle * 1.2;
+								g2.append("path")
+									.attr("d", "M0," + -s + " L" + s + ",0 0," + s + " " + -s + ",0 Z")
+									.attr("fill", fillScale(d.cycleCount))
+									.attr("stroke", "rgba(184,55,38,0.2)")
+									.attr("stroke-width", 1);
+								g2.append("text")
+									.attr("text-anchor", "middle")
+									.attr("dy", "0.35em")
+									.style("font-size", "10px")
+									.style("fill", "#333")
+									.style("font-weight", 600)
+									.text(d.name.length > 10 ? d.name.slice(0, 9) + "…" : d.name);
+							} else {
+								const w2 = d.cardW / 2;
+								const h2 = d.cardH / 2;
+								g2.append("rect")
+									.attr("x", -w2)
+									.attr("y", -h2)
+									.attr("width", d.cardW)
+									.attr("height", d.cardH)
+									.attr("rx", 8)
+									.attr("ry", 8)
+									.attr("fill", fillScale(d.cycleCount))
+									.attr("stroke", "rgba(184,55,38,0.2)")
+									.attr("stroke-width", 1);
+								g2.append("text")
+									.attr("text-anchor", "middle")
+									.attr("dy", "-0.3em")
+									.style("font-size", "12px")
+									.style("fill", "#333")
+									.style("font-weight", 600)
+									.text(d.name);
+								g2.append("text")
+									.attr("text-anchor", "middle")
+									.attr("dy", "0.9em")
+									.style("font-size", "9px")
+									.style("fill", "#555")
+									.text(
+										d.cycleCount +
+											" cycle" +
+											(d.cycleCount !== 1 ? "s" : "") +
+											" · " +
+											d.langCount +
+											" lang" +
+											(d.langCount !== 1 ? "s" : ""),
+									);
+							}
+						});
+
+						const tooltip = document.getElementById("tooltip");
+						const ttName = tooltip.querySelector(".name");
+						const ttCycles = tooltip.querySelector(".cycles");
+						const ttLangs = tooltip.querySelector(".langs");
+
+						function showTooltip(d, isSelected) {
+							ttName.textContent = d.name;
+							ttCycles.textContent = "Participation: " + (d.cycles.length ? d.cycles.join(", ") : "—");
+							ttLangs.innerHTML = nativeLabel(d) || "—";
+							tooltip.classList.add("visible");
+							tooltip.classList.toggle("selected", !!isSelected);
+						}
+
+						g.on("mouseover", function (e, d) {
+							showTooltip(d, !!state.selectedId);
+						})
+							.on("mouseout", () => {
+								if (!state.selectedId) tooltip.classList.remove("visible");
+								else {
+									const sel = DATA.find((r) => r.id === state.selectedId);
+									if (sel) showTooltip(sel, true);
+								}
+							})
+							.on("click", (e, d) => {
+								e.stopPropagation();
+								state.selectedId = state.selectedId === d.id ? null : d.id;
+								g.classed("dimmed", (n) => state.selectedId !== null && n.id !== state.selectedId);
+								if (state.selectedId) {
+									const sel = DATA.find((r) => r.id === state.selectedId);
+									showTooltip(sel, true);
+								} else {
+									tooltip.classList.remove("visible", "selected");
+								}
+							});
+
+						const drag = d3
+							.drag()
+							.on("start", (e, d) => {
+								if (!e.active) sim.alphaTarget(0.3).restart();
+								d.fx = d.x;
+								d.fy = d.y;
+							})
+							.on("drag", (e, d) => {
+								d.fx = e.x;
+								d.fy = e.y;
+							})
+							.on("end", (e, d) => {
+								if (!e.active) sim.alphaTarget(0);
+								d.fx = null;
+								d.fy = null;
+							});
+						g.call(drag);
+
+						sim = d3
+							.forceSimulation(nodes)
+							.force(
+								"collide",
+								d3.forceCollide().radius((d) => d.radius),
+							)
+							.force("x", d3.forceX(w / 2).strength(0.01))
+							.force("y", d3.forceY(h / 2.2).strength(0.05))
+							.on("tick", () => {
+								g.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+							});
+
+						svg.on("click", function (e) {
+							if (e.target === this || d3.select(e.target).classed("viz-bg")) {
+								state.selectedId = null;
+								g.classed("dimmed", false);
+								tooltip.classList.remove("visible", "selected");
+							}
+						});
+					}
+
+					document.querySelectorAll("#filter-bar span[data-cycle]").forEach((el) => {
+						el.addEventListener("click", () => {
+							document.querySelectorAll("#filter-bar span[data-cycle]").forEach((s) => s.classList.remove("on"));
+							el.classList.add("on");
+							state.cycleFilter = el.dataset.cycle;
+							state.selectedId = null;
+							runViz();
+						});
+					});
+
+					document.getElementById("search").addEventListener("input", (e) => {
+						state.search = e.target.value;
+						state.selectedId = null;
+						runViz();
+					});
+
+					window.addEventListener("resize", () => runViz());
+					window.addEventListener("load", () => runViz());
+				})
+				.catch(function (err) {
+					console.error("Failed to load CountryInfoforMap.csv:", err);
+				});
+		</script>
+	</body>
+</html>

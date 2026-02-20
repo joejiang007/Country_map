@@ -2,146 +2,402 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>Participation Overview</title>
-
+		<title>PISA Participation Map</title>
+		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+		<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
 		<style>
+			* { box-sizing: border-box; }
 			body {
 				margin: 0;
-				background: #f5f5f7;
-				font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+				background: #0f1419;
+				font-family: "DM Sans", -apple-system, BlinkMacSystemFont, sans-serif;
 				overflow: hidden;
+				color: #e6edf3;
 			}
-
-			.container {
+			#app {
 				position: relative;
 				width: 100vw;
 				height: 100vh;
 			}
-
-			/* CENTER TEXT */
-			.statement {
-				position: absolute;
-				top: 50%;
-				left: 50%;
-				transform: translate(-50%, -50%);
-				text-align: center;
-				max-width: 700px;
-				font-size: 42px;
-				font-weight: 600;
-				line-height: 1.2;
-				transition: opacity 0.3s ease;
+			svg {
+				display: block;
+				width: 100%;
+				height: 100%;
+				cursor: grab;
 			}
-
-			.sub {
-				font-size: 20px;
-				font-weight: 400;
-				margin-top: 18px;
-				color: #555;
+			svg:active { cursor: grabbing; }
+			.country {
+				fill: #1c2128;
+				stroke: #30363d;
+				stroke-width: 0.3px;
+				transition: fill 0.2s ease, stroke 0.2s ease, filter 0.2s ease;
 			}
-
-			/* FLAG RING */
-			.flag-wrapper {
-				position: absolute;
-				text-align: center;
-				transform: translate(-50%, -50%);
-				cursor: pointer;
-				transition: transform 0.3s ease;
+			.country:hover {
+				filter: brightness(1.3);
 			}
-
-			.flag-wrapper:hover {
-				transform: translate(-50%, -50%) scale(1.15);
+			.country.highlight {
+				stroke: #58a6ff;
+				stroke-width: 1.5px;
+				filter: brightness(1.25);
 			}
-
-			.flag {
-				width: 70px;
-				height: 46px;
-				object-fit: cover;
-				border-radius: 6px;
-				box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-			}
-
-			.tooltip {
-				font-size: 12px;
-				margin-top: 6px;
+			#tooltip {
+				position: fixed;
+				pointer-events: none;
+				background: rgba(22, 27, 34, 0.95);
+				border: 1px solid #30363d;
+				border-radius: 10px;
+				padding: 12px 16px;
+				font-size: 13px;
+				max-width: 320px;
+				box-shadow: 0 8px 24px rgba(0,0,0,0.4);
 				opacity: 0;
+				transition: opacity 0.15s ease, transform 0.15s ease;
+				z-index: 100;
+			}
+			#tooltip.visible { opacity: 1; }
+			#tooltip h3 { margin: 0 0 8px 0; font-size: 15px; color: #58a6ff; }
+			#tooltip .cycles { color: #8b949e; margin-bottom: 4px; }
+			#tooltip .languages { color: #7ee787; font-size: 12px; }
+			#panel {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				width: 320px;
+				max-height: calc(100vh - 40px);
+				overflow-y: auto;
+				background: rgba(22, 27, 34, 0.96);
+				border: 1px solid #30363d;
+				border-radius: 12px;
+				padding: 20px;
+				box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+				z-index: 50;
+				opacity: 0;
+				pointer-events: none;
 				transition: opacity 0.2s ease;
 			}
-
-			.flag-wrapper:hover .tooltip {
+			#panel.visible {
 				opacity: 1;
+				pointer-events: auto;
+			}
+			#panel h2 { margin: 0 0 12px 0; font-size: 20px; color: #58a6ff; }
+			#panel .meta { color: #8b949e; font-size: 13px; margin-bottom: 12px; }
+			#panel .cycle-list { font-size: 13px; line-height: 1.6; }
+			#panel .cycle-list span { display: inline-block; margin-right: 8px; margin-bottom: 4px; padding: 2px 8px; background: #21262d; border-radius: 6px; }
+			#panel .close { margin-top: 16px; cursor: pointer; color: #58a6ff; font-size: 13px; }
+			#panel .close:hover { text-decoration: underline; }
+			#legend {
+				position: fixed;
+				bottom: 24px;
+				left: 24px;
+				background: rgba(22, 27, 34, 0.92);
+				border: 1px solid #30363d;
+				border-radius: 10px;
+				padding: 14px 18px;
+				z-index: 50;
+			}
+			#legend h4 { margin: 0 0 10px 0; font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: 0.05em; }
+			#legend .scale {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+				font-size: 11px;
+				color: #8b949e;
+			}
+			#legend .scale div { width: 24px; height: 14px; border-radius: 4px; }
+			#filter {
+				position: fixed;
+				top: 20px;
+				left: 20px;
+				display: flex;
+				flex-wrap: wrap;
+				gap: 8px;
+				z-index: 50;
+			}
+			#filter button {
+				padding: 8px 14px;
+				border: 1px solid #30363d;
+				border-radius: 8px;
+				background: rgba(22, 27, 34, 0.9);
+				color: #e6edf3;
+				font-size: 12px;
+				cursor: pointer;
+				transition: background 0.2s, border-color 0.2s;
+			}
+			#filter button:hover { background: #21262d; border-color: #58a6ff; }
+			#filter button.active { background: #238636; border-color: #2ea043; }
+			#title {
+				position: fixed;
+				top: 20px;
+				left: 50%;
+				transform: translateX(-50%);
+				font-size: 18px;
+				font-weight: 600;
+				color: #e6edf3;
+				z-index: 40;
+				pointer-events: none;
 			}
 		</style>
 	</head>
 	<body>
-		<div class="container" id="container">
-			<div class="statement" id="statement">
-				Participating Countries
-				<div class="sub">Click a flag to explore details.</div>
+		<div id="app"></div>
+		<div id="tooltip"></div>
+		<div id="panel"></div>
+		<div id="legend">
+			<h4>Participation cycles</h4>
+			<div class="scale">
+				<div style="background:#161b22;"></div>
+				<div style="background:#0e4429;"></div>
+				<div style="background:#006d32;"></div>
+				<div style="background:#26a641;"></div>
+				<div style="background:#39d353;"></div>
+				<span>0 → 6+</span>
 			</div>
 		</div>
+		<div id="filter">
+			<button data-cycle="all" class="active">All</button>
+			<button data-cycle="P21">P21</button>
+			<button data-cycle="P16">P16</button>
+			<button data-cycle="P11">P11</button>
+			<button data-cycle="P06">P06</button>
+			<button data-cycle="P01">P01</button>
+		</div>
+		<div id="title">PISA participation by country</div>
 
 		<script>
-			const countries = [
-				{ name: "Finland", code: "fi", cycles: 8, languages: ["Finnish", "Swedish"] },
-				{ name: "Japan", code: "jp", cycles: 8, languages: ["Japanese"] },
-				{ name: "Canada", code: "ca", cycles: 6, languages: ["English", "French"] },
-				{ name: "Brazil", code: "br", cycles: 5, languages: ["Portuguese"] },
-				{ name: "France", code: "fr", cycles: 7, languages: ["French"] },
-				{ name: "Morocco", code: "ma", cycles: 3, languages: ["Arabic", "French"] },
-				{ name: "Spain", code: "es", cycles: 6, languages: ["Spanish"] },
-				{ name: "Germany", code: "de", cycles: 6, languages: ["German"] },
-				{ name: "Australia", code: "au", cycles: 7, languages: ["English"] },
-				{ name: "South Korea", code: "kr", cycles: 8, languages: ["Korean"] },
-				{ name: "Italy", code: "it", cycles: 6, languages: ["Italian"] },
-				{ name: "Sweden", code: "se", cycles: 7, languages: ["Swedish"] },
+			// CSV-derived data (from CountryInfoforMap.csv)
+			const CSV_ROWS = [
+				{ Country: "Albania", Benchmarker: "", "Participated P21 ": "", "Participated P21 Delayed": "", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Albanian" },
+				{ Country: "Australia", Benchmarker: "", "Participated P21 ": "", "Participated P21 Delayed": "", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "English" },
+				{ Country: "Austria", Benchmarker: "", "Participated P21 ": "X", "Participated P21 Delayed": "", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "", "P26 Assessment Languages": "German" },
+				{ Country: "Azerbaijan", Benchmarker: "", "Participated P21 ": "", "Participated P21 Delayed": "", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Azerbaijani, Russian" },
+				{ Country: "Bahrain", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Belgium (Flemish)", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "X", "Participated P01": "", "P26 Assessment Languages": "Dutch" },
+				{ Country: "Belgium (French)", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "", "P26 Assessment Languages": "French" },
+				{ Country: "Brazil", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Portuguese" },
+				{ Country: "Bulgaria", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Bulgarian" },
+				{ Country: "Canada", Benchmarker: "", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "English, French" },
+				{ Country: "Ontario, Canada", Benchmarker: "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "English, French" },
+				{ Country: "Quebec, Canada", Benchmarker: "X", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "English, French" },
+				{ Country: "Chinese Taipei", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Chinese" },
+				{ Country: "Cyprus", Benchmarker: "", "Participated P21 ": "", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "X", "P26 Assessment Languages": "English, Greek" },
+				{ Country: "Czech Republic", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Czech" },
+				{ Country: "Denmark", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Danish" },
+				{ Country: "England", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "English" },
+				{ Country: "Finland", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Finnish, Swedish" },
+				{ Country: "France", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "French" },
+				{ Country: "Georgia", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "", "P26 Assessment Languages": "Georgian" },
+				{ Country: "Germany", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Arabic, English, German, Turkish, Ukrainian" },
+				{ Country: "Hong Kong SAR", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Chinese" },
+				{ Country: "Hungary", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Hungarian" },
+				{ Country: "Iran, Islamic Rep. of", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Persian" },
+				{ Country: "Ireland", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "English, Irish" },
+				{ Country: "Israel", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, Hebrew" },
+				{ Country: "Italy", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Italian" },
+				{ Country: "Jordan", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic" },
+				{ Country: "Kazakhstan", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Kazakh, Russian" },
+				{ Country: "Korea, Rep. of", Benchmarker: "", "P26 Assessment Languages": "Korean" },
+				{ Country: "Kuwait", Benchmarker: "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Latvia", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Latvian" },
+				{ Country: "Lithuania", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Lithuanian, Polish, Russian" },
+				{ Country: "Macao SAR", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Chinese, English, Portuguese" },
+				{ Country: "Malta", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "English, Maltese" },
+				{ Country: "Montenegro", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Montenegrin" },
+				{ Country: "Morocco", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic" },
+				{ Country: "Netherlands", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Dutch" },
+				{ Country: "New Zealand", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "English" },
+				{ Country: "North Macedonia", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Albanian, Macedonian" },
+				{ Country: "Northern Ireland", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "English" },
+				{ Country: "Norway", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Bokmal, Nynorsk, English" },
+				{ Country: "Oman", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Poland", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Polish, Ukrainian" },
+				{ Country: "Portugal", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Portuguese" },
+				{ Country: "Qatar", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Romania", Benchmarker: "", "P26 Assessment Languages": "Romanian" },
+				{ Country: "Saudi Arabia", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Saudi Arabia (RCJY)", Benchmarker: "X", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "South Africa", Benchmarker: "", "Participated P21 ": "X", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "English, Afrikaans, IsiXhosa, IsiZulu, IsiNdebele, Sepedi, Sesotho, Setswana, Siswati, Tshivenda, Xitsonga" },
+				{ Country: "Scotland", Benchmarker: "", "P26 Assessment Languages": "English" },
+				{ Country: "Serbia", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Serbian" },
+				{ Country: "Singapore", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Chinese, English, Malay, Tamil" },
+				{ Country: "Slovak Republic", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Hungarian, Slovak" },
+				{ Country: "Slovenia", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Slovenian" },
+				{ Country: "Spain", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "", "P26 Assessment Languages": "Basque, Catalan, Galician, Spanish, Valencian" },
+				{ Country: "Sweden", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "X", "Participated P01": "X", "P26 Assessment Languages": "Arabic, English, Swedish" },
+				{ Country: "Tajikistan", Benchmarker: "", "P26 Assessment Languages": "Russian, Tajik" },
+				{ Country: "United Arab Emirates", Benchmarker: "", "Participated P21 Delayed": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Abu Dhabi, UAE", Benchmarker: "X", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Dubai, UAE", Benchmarker: "X", "Participated P21 ": "X", "Participated P16": "X", "Participated P11": "X", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Sharjah, UAE", Benchmarker: "X", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Arabic, English" },
+				{ Country: "Uzbekistan", Benchmarker: "", "Participated P21 ": "X", "Participated P16": "", "Participated P11": "", "Participated P06": "", "Participated P01": "", "P26 Assessment Languages": "Karakalpak, Russian, Uzbek" },
+				{ Country: "Wales", Benchmarker: "", "P26 Assessment Languages": "English, Welsh" },
 			];
 
-			const container = document.getElementById("container");
-			const statement = document.getElementById("statement");
+			// Map CSV country name -> GeoJSON id (ISO 3166-1 alpha-3)
+			const COUNTRY_TO_ID = {
+				"Albania": "ALB", "Australia": "AUS", "Austria": "AUT", "Azerbaijan": "AZE", "Bahrain": "BHR",
+				"Belgium (Flemish)": "BEL", "Belgium (French)": "BEL", "Brazil": "BRA", "Bulgaria": "BGR",
+				"Canada": "CAN", "Ontario, Canada": "CAN", "Quebec, Canada": "CAN",
+				"Chinese Taipei": "TWN", "Cyprus": "CYP", "Czech Republic": "CZE", "Denmark": "DNK",
+				"England": "GBR", "Finland": "FIN", "France": "FRA", "Georgia": "GEO", "Germany": "DEU",
+				"Hong Kong SAR": "HKG", "Hungary": "HUN", "Iran, Islamic Rep. of": "IRN", "Ireland": "IRL",
+				"Israel": "ISR", "Italy": "ITA", "Jordan": "JOR", "Kazakhstan": "KAZ", "Korea, Rep. of": "KOR",
+				"Kuwait": "KWT", "Latvia": "LVA", "Lithuania": "LTU", "Macao SAR": "MAC", "Malta": "MLT",
+				"Montenegro": "MNE", "Morocco": "MAR", "Netherlands": "NLD", "New Zealand": "NZL",
+				"North Macedonia": "MKD", "Northern Ireland": "GBR", "Norway": "NOR", "Oman": "OMN",
+				"Poland": "POL", "Portugal": "PRT", "Qatar": "QAT", "Romania": "ROU",
+				"Saudi Arabia": "SAU", "Saudi Arabia (RCJY)": "SAU", "South Africa": "ZAF", "Scotland": "GBR",
+				"Serbia": "SRB", "Singapore": "SGP", "Slovak Republic": "SVK", "Slovenia": "SVN",
+				"Spain": "ESP", "Sweden": "SWE", "Tajikistan": "TJK",
+				"United Arab Emirates": "ARE", "Abu Dhabi, UAE": "ARE", "Dubai, UAE": "ARE", "Sharjah, UAE": "ARE",
+				"Uzbekistan": "UZB", "Wales": "GBR"
+			};
 
-			const centerX = window.innerWidth / 2;
-			const centerY = window.innerHeight / 2;
-			const radius = Math.min(window.innerWidth, window.innerHeight) / 2.5;
+			const CYCLE_KEYS = ["Participated P21 ", "Participated P21 Delayed", "Participated P16", "Participated P11", "Participated P06", "Participated P01"];
 
-			countries.forEach((country, i) => {
-				const angle = (i / countries.length) * (2 * Math.PI);
+			function parseRow(row) {
+				const cycles = [];
+				if (row["Participated P21 "] === "X") cycles.push("P21");
+				if (row["Participated P21 Delayed"] === "X") cycles.push("P21 Delayed");
+				if (row["Participated P16"] === "X") cycles.push("P16");
+				if (row["Participated P11"] === "X") cycles.push("P11");
+				if (row["Participated P06"] === "X") cycles.push("P06");
+				if (row["Participated P01"] === "X") cycles.push("P01");
+				return {
+					country: row.Country,
+					cycles,
+					count: cycles.length,
+					languages: (row["P26 Assessment Languages"] || "").trim(),
+					benchmarker: row.Benchmarker === "X"
+				};
+			}
 
-				const x = centerX + radius * Math.cos(angle);
-				const y = centerY + radius * Math.sin(angle);
+			// Aggregate by map id: max participation count and list of entities
+			function aggregateByCountry(rows) {
+				const byId = {};
+				for (const row of rows) {
+					const id = COUNTRY_TO_ID[row.Country];
+					if (!id) continue;
+					const parsed = parseRow(row);
+					if (!byId[id]) {
+						byId[id] = { count: 0, cycles: new Set(), entities: [], languages: parsed.languages };
+					}
+					byId[id].count = Math.max(byId[id].count, parsed.count);
+					parsed.cycles.forEach(c => byId[id].cycles.add(c));
+					byId[id].entities.push({ name: row.Country, ...parsed });
+				}
+				return byId;
+			}
 
-				const wrapper = document.createElement("div");
-				wrapper.classList.add("flag-wrapper");
-				wrapper.style.left = `${x}px`;
-				wrapper.style.top = `${y}px`;
+			const countryData = aggregateByCountry(CSV_ROWS);
+			const colorScale = d3.scaleSequential(d3.interpolateGreens).domain([0, 6]);
 
-				const img = document.createElement("img");
-				img.src = `https://flagcdn.com/w160/${country.code}.png`;
-				img.classList.add("flag");
-				img.alt = country.name;
+			const width = window.innerWidth;
+			const height = window.innerHeight;
+			const projection = d3.geoMercator().scale(120).translate([width / 2, height / 2.1]);
+			const pathGenerator = d3.geoPath().projection(projection);
 
-				const tooltip = document.createElement("div");
-				tooltip.classList.add("tooltip");
-				tooltip.textContent = country.name;
+			const svg = d3.select("#app").append("svg").attr("width", width).attr("height", height);
+			const g = svg.append("g");
 
-				wrapper.appendChild(img);
-				wrapper.appendChild(tooltip);
+			let currentFilter = "all";
 
-				wrapper.addEventListener("click", () => {
-					const langText =
-						country.languages.length > 1 ?
-							country.languages.slice(0, -1).join(", ") + " and " + country.languages.slice(-1)
-						:	country.languages[0];
+			// Close panel when clicking map background (not on a country)
+			svg.on("click", (e) => {
+				if (e.target.tagName !== "path") document.getElementById("panel").classList.remove("visible");
+			});
+			let zoom = d3.zoom().scaleExtent([1, 8]).on("zoom", (e) => g.attr("transform", e.transform));
+			svg.call(zoom);
 
-					statement.style.opacity = 0;
+			function cycleMatch(data, filter) {
+				if (filter === "all") return true;
+				return data && data.cycles && data.cycles.has(filter);
+			}
 
-					setTimeout(() => {
-						statement.innerHTML = `${country.name} participates ${country.cycles} times.
-         <div class="sub">They speak ${langText}.</div>`;
-						statement.style.opacity = 1;
-					}, 200);
+			function fillFor(d) {
+				const data = countryData[d.id];
+				if (!data) return "#161b22";
+				if (!cycleMatch(data, currentFilter)) return "#161b22";
+				return colorScale(Math.min(6, data.count));
+			}
+
+			function render(world) {
+				const features = world.features.filter((d) => d.id !== "ATA"); // hide Antarctica for clarity
+				g.selectAll("path")
+					.data(features)
+					.join("path")
+					.attr("class", "country")
+					.attr("d", pathGenerator)
+					.attr("fill", (d) => fillFor(d))
+					.attr("data-id", (d) => d.id)
+					.on("mouseenter", (e, d) => {
+						const data = countryData[d.id];
+						d3.select(e.target).classed("highlight", true);
+						const tooltip = document.getElementById("tooltip");
+						tooltip.classList.add("visible");
+						const name = d.properties?.name || d.id;
+						let html = `<h3>${name}</h3>`;
+						if (data) {
+							const cycleList = [...data.cycles].sort().join(", ");
+							html += `<div class="cycles">Cycles: ${cycleList || "—"}</div>`;
+							html += `<div class="languages">${data.languages || ""}</div>`;
+						} else {
+							html += '<div class="cycles">No participation data</div>';
+						}
+						tooltip.innerHTML = html;
+						tooltip.style.left = `${e.pageX + 14}px`;
+						tooltip.style.top = `${e.pageY + 14}px`;
+					})
+					.on("mousemove", (e) => {
+						document.getElementById("tooltip").style.left = `${e.pageX + 14}px`;
+						document.getElementById("tooltip").style.top = `${e.pageY + 14}px`;
+					})
+					.on("mouseleave", (e) => {
+						d3.select(e.target).classed("highlight", false);
+						document.getElementById("tooltip").classList.remove("visible");
+					})
+					.on("click", (e, d) => {
+						const data = countryData[d.id];
+						const name = d.properties?.name || d.id;
+						const panel = document.getElementById("panel");
+						if (!data) {
+							panel.innerHTML = `<h2>${name}</h2><div class="meta">No participation data in dataset.</div><div class="close">Close</div>`;
+						} else {
+							const cycleList = [...data.cycles].sort().map((c) => `<span>${c}</span>`).join("");
+							const entitiesList = data.entities.map((e) => e.name).join(", ");
+							panel.innerHTML = `
+								<h2>${name}</h2>
+								<div class="meta">Entities: ${entitiesList}</div>
+								<div class="cycle-list">${cycleList}</div>
+								<div class="meta" style="margin-top:12px">Languages: ${data.languages}</div>
+								<div class="close">Close</div>
+							`;
+						}
+						panel.classList.add("visible");
+						panel.querySelector(".close").onclick = () => panel.classList.remove("visible");
+					});
+			}
+
+			// Load world GeoJSON
+			d3.json("https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/DATA/world.geojson")
+				.then((world) => {
+					render(world);
+				})
+				.catch(() => {
+					// Fallback: fetch from raw GitHub (may have CORS in some environments)
+					return d3.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson").then(render);
+				})
+				.catch((err) => {
+					document.getElementById("app").innerHTML = "<p style='padding:40px;text-align:center'>Could not load map data. Open this page via a local server (e.g. <code>npx serve .</code>) or check network.</p>";
 				});
 
-				container.appendChild(wrapper);
+			// Filter buttons
+			document.querySelectorAll("#filter button").forEach((btn) => {
+				btn.addEventListener("click", () => {
+					document.querySelectorAll("#filter button").forEach((b) => b.classList.remove("active"));
+					btn.classList.add("active");
+					currentFilter = btn.dataset.cycle;
+					g.selectAll(".country").attr("fill", (d) => fillFor(d));
+				});
 			});
 		</script>
 	</body>
