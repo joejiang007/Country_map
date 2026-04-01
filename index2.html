@@ -102,6 +102,26 @@
 				outline: none;
 				border-color: var(--dominant);
 			}
+			#filter-bar button {
+				padding: 6px 14px;
+				border-radius: 8px;
+				font-size: 0.85rem;
+				cursor: pointer;
+				background: #f0f0f0;
+				color: #555;
+				border: 1px solid #e0e0e0;
+				font-family: inherit;
+				transition: all 0.15s;
+			}
+			#filter-bar button:hover {
+				background: #e8e8e8;
+				color: #222;
+			}
+			#filter-bar button.on {
+				background: rgba(184, 55, 38, 0.12);
+				color: var(--dominant);
+				border-color: rgba(184, 55, 38, 0.35);
+			}
 			#tooltip {
 				position: fixed;
 				left: 40%;
@@ -178,16 +198,6 @@
 			#tooltip.visible.selected .card .cycles {
 				font-size: 1.15rem;
 			}
-			#tooltip .card .langs {
-				font-size: 1rem;
-				color: #444;
-				font-style: italic;
-				line-height: 1.6;
-				transition: font-size 0.4s ease;
-			}
-			#tooltip.visible.selected .card .langs {
-				font-size: 1.2rem;
-			}
 			#tooltip .link-holder {
 				margin-top: 12px;
 				width: 100%;
@@ -236,6 +246,7 @@
 			<span data-cycle="P11">P11</span>
 			<span data-cycle="P06">P06</span>
 			<span data-cycle="P01">P01</span>
+			<button id="layout-toggle" type="button">Ordered Layout</button>
 			<label for="search" style="margin-left: 24px; margin-right: 8px; font-size: 0.85rem; color: #555">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
 		</div>
@@ -245,7 +256,6 @@
 				<div class="flag-holder"></div>
 				<div class="name"></div>
 				<div class="cycles"></div>
-				<div class="langs"></div>
 				<div class="country-link"><a href="">See Individual Country Page</a></div>
 			</div>
 		</div>
@@ -342,7 +352,7 @@
 						Wales: "gb",
 					};
 
-					let state = { cycleFilter: "all", selectedId: null, search: "" };
+					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
 
 					function filteredData() {
 						let list = state.cycleFilter === "all" ? DATA : DATA.filter((d) => d.cycles.includes(state.cycleFilter));
@@ -353,100 +363,17 @@
 						return list;
 					}
 
-					// Country name in its assessment language(s) — native form for tooltip
-					const NATIVE_NAMES = {
-						Albania: { Albanian: "Shqipëria" },
-						Australia: { English: "Australia" },
-						Austria: { German: "Österreich" },
-						Azerbaijan: { Azerbaijani: "Azərbaycan", Russian: "Азербайджан" },
-						Bahrain: { Arabic: "البحرين", English: "Bahrain" },
-						"Belgium (Flemish)": { Dutch: "België" },
-						"Belgium (French)": { French: "Belgique" },
-						Brazil: { Portuguese: "Brasil" },
-						Bulgaria: { Bulgarian: "България" },
-						Canada: { English: "Canada", French: "Canada" },
-						Chile: { Spanish: "Chile" },
-						China: { Chinese: "中国" },
-						Colombia: { Spanish: "Colombia" },
-						Croatia: { Croatian: "Hrvatska" },
-						Cyprus: { Greek: "Κύπρος", English: "Cyprus" },
-						"Czech Republic": { Czech: "Česko" },
-						Denmark: { Danish: "Danmark" },
-						"Dominican Republic": { Spanish: "República Dominicana" },
-						Egypt: { Arabic: "مصر" },
-						Estonia: { Estonian: "Eesti" },
-						Finland: { Finnish: "Suomi", Swedish: "Finland" },
-						France: { French: "France" },
-						Georgia: { Georgian: "საქართველო" },
-						Germany: { German: "Deutschland" },
-						Greece: { Greek: "Ελλάδα", English: "Greece" },
-						"Hong Kong": { Chinese: "香港" },
-						Hungary: { Hungarian: "Magyarország" },
-						Iceland: { Icelandic: "Ísland" },
-						Indonesia: { Indonesian: "Indonesia" },
-						Iran: { Persian: "ایران" },
-						Ireland: { English: "Ireland", Irish: "Éire" },
-						Israel: { Arabic: "إسرائيل", Hebrew: "ישראל" },
-						Italy: { Italian: "Italia" },
-						Japan: { Japanese: "日本" },
-						Jordan: { Arabic: "الأردن" },
-						Kazakhstan: { Kazakh: "Қазақстан", Russian: "Казахстан" },
-						Korea: { Korean: "한국" },
-						Kosovo: { Albanian: "Kosova", Serbian: "Косово" },
-						Latvia: { Latvian: "Latvija", Russian: "Латвия" },
-						Lebanon: { Arabic: "لبنان" },
-						Lithuania: { Lithuanian: "Lietuva", Polish: "Litwa", Russian: "Литва" },
-						"Macao SAR": { Chinese: "澳門", English: "Macao", Portuguese: "Macau" },
-						Malta: { English: "Malta", Maltese: "Malta" },
-						Montenegro: { Montenegrin: "Crna Gora" },
-						Morocco: { Arabic: "المغرب" },
-						Netherlands: { Dutch: "Nederland" },
-						"New Zealand": { English: "New Zealand", Māori: "Aotearoa" },
-						"North Macedonia": { Albanian: "Maqedonia e Veriut", Macedonian: "Северна Македонија" },
-						"Northern Ireland": { English: "Northern Ireland" },
-						Norway: { Bokmal: "Norge", Nynorsk: "Noreg", English: "Norway" },
-						Oman: { Arabic: "عمان", English: "Oman" },
-						Poland: { Polish: "Polska", Ukrainian: "Польща" },
-						Portugal: { Portuguese: "Portugal" },
-						Qatar: { Arabic: "قطر", English: "Qatar" },
-						Romania: { Romanian: "România" },
-						"Saudi Arabia": { Arabic: "السعودية", English: "Saudi Arabia" },
-						"Saudi Arabia (RCJY)": { Arabic: "السعودية", English: "Saudi Arabia" },
-						Scotland: { English: "Scotland" },
-						Serbia: { Serbian: "Србија" },
-						Singapore: { Chinese: "新加坡", English: "Singapore", Malay: "Singapura", Tamil: "சிங்கப்பூர்" },
-						"Slovak Republic": { Hungarian: "Szlovákia", Slovak: "Slovensko" },
-						Slovenia: { Slovenian: "Slovenija" },
-						"South Africa": {
-							English: "South Africa",
-							Afrikaans: "Suid-Afrika",
-							IsiXhosa: "iMzanzi Afrika",
-							IsiZulu: "iNingizimu Afrika",
-						},
-						Spain: {
-							Basque: "Espainia",
-							Catalan: "Espanya",
-							Galician: "España",
-							Spanish: "España",
-							Valencian: "Espanya",
-						},
-						Sweden: { Arabic: "السويد", English: "Sweden", Swedish: "Sverige" },
-						Tajikistan: { Russian: "Таджикистан", Tajik: "Тоҷикистон" },
-						"United Arab Emirates": { Arabic: "الإمارات", English: "United Arab Emirates" },
-						"Abu Dhabi, UAE": { Arabic: "أبوظبي", English: "Abu Dhabi" },
-						Uzbekistan: { Karakalpak: "Qaraqalpaqstan", Russian: "Узбекистан", Uzbek: "Oʻzbekiston" },
-						Wales: { English: "Wales", Welsh: "Cymru" },
-					};
-
-					function nativeLabel(d) {
-						const byLang = NATIVE_NAMES[d.name];
-						return (d.languages || [])
-							.map((lang) => {
-								const L = (lang || "").trim();
-								const native = byLang && byLang[L];
-								return native ? L + ": " + native : L;
-							})
-							.join(" <br> ");
+					function orderedTarget(i, w, h, total) {
+						const cols = Math.max(4, Math.floor((w - 80) / 150));
+						const rows = Math.max(1, Math.ceil(total / cols));
+						const xGap = Math.max(110, Math.min(170, (w - 80) / cols));
+						const yGap = Math.max(90, Math.min(135, (h - 80) / rows));
+						const col = i % cols;
+						const row = Math.floor(i / cols);
+						return {
+							x: 40 + xGap / 2 + col * xGap,
+							y: 40 + yGap / 2 + row * yGap,
+						};
 					}
 
 					const fillScale = d3
@@ -468,18 +395,62 @@
 						return { w: Math.max(d.name.length * 5.5, 70) + base, h: base * 2.2 };
 					}
 
+					function splitLabel(text, maxCharsPerLine, maxLines) {
+						const words = String(text || "").split(/\s+/).filter(Boolean);
+						const lines = [];
+						let current = "";
+
+						words.forEach((word) => {
+							const next = current ? current + " " + word : word;
+							if (!current || next.length <= maxCharsPerLine) {
+								current = next;
+								return;
+							}
+							lines.push(current);
+							current = word;
+						});
+
+						if (current) lines.push(current);
+						if (!lines.length) lines.push(String(text || ""));
+						return lines.slice(0, maxLines);
+					}
+
+					function drawNodeLabel(group, text, options) {
+						const lines = splitLabel(text, options.maxCharsPerLine, options.maxLines);
+						const textEl = group
+							.append("text")
+							.attr("text-anchor", "middle")
+							.style("font-size", options.fontSize + "px")
+							.style("fill", "#0d0d0d")
+							.style("font-weight", 700);
+
+						const startY = -((lines.length - 1) * options.lineHeight) / 2;
+						lines.forEach((line, i) => {
+							textEl
+								.append("tspan")
+								.attr("x", 0)
+								.attr("dy", i === 0 ? startY + "em" : options.lineHeight + "em")
+								.text(line);
+						});
+					}
+
 					let sim = null;
 
 					function runViz() {
 						const el = document.getElementById("viz");
 						const w = Math.max(el.clientWidth || 800, 400);
 						const h = Math.max(el.clientHeight || 500, 300);
+						const orderedMode = state.layoutMode === "ordered";
 						const list = filteredData();
+						const orderedList = orderedMode
+							? [...list].sort((a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name))
+							: list;
 
-						const nodes = list.map((d) => {
+						const nodes = orderedList.map((d, i) => {
 							const shape = shapeFor(d);
-							const cs = cardSize(d);
 							const r = nodeRadius(d);
+							const cs = cardSize(d);
+							const target = orderedMode ? orderedTarget(i, w, h, orderedList.length) : { x: w / 2, y: h / 2.8 };
 							return {
 								...d,
 								shape,
@@ -487,6 +458,8 @@
 								cardW: cs.w,
 								cardH: cs.h,
 								radiusCircle: r,
+								targetX: target.x,
+								targetY: target.y,
 								x: w / 2 + (Math.random() - 0.5) * w * 0.5,
 								y: h / 2 + (Math.random() - 0.5) * h * 0.5,
 							};
@@ -512,13 +485,7 @@
 									.attr("fill", fillScale(d.cycleCount))
 									.attr("stroke", "rgba(184,55,38,0.2)")
 									.attr("stroke-width", 1);
-								g2.append("text")
-									.attr("text-anchor", "middle")
-									.attr("dy", "0.35em")
-									.style("font-size", "13px")
-									.style("fill", "#0d0d0d")
-									.style("font-weight", 700)
-									.text(d.name.length > 8 ? d.name.slice(0, 7) + "…" : d.name);
+								drawNodeLabel(g2, d.name, { fontSize: 11, maxCharsPerLine: 9, maxLines: 3, lineHeight: 1.05 });
 							} else {
 								const w2 = d.cardW / 2;
 								const h2 = d.cardH / 2;
@@ -532,39 +499,17 @@
 									.attr("fill", fillScale(d.cycleCount))
 									.attr("stroke", "rgba(184,55,38,0.2)")
 									.attr("stroke-width", 1);
-								g2.append("text")
-									.attr("text-anchor", "middle")
-									.attr("dy", "0.35em")
-									.style("font-size", "13px")
-									.style("fill", "#0d0d0d")
-									.style("font-weight", 700)
-									.text(d.name);
-								// g2.append("text")
-								// 	.attr("text-anchor", "middle")
-								// 	.attr("dy", "0.9em")
-								// 	.style("font-size", "9px")
-								// 	.style("fill", "#333")
-								// 	.text(
-								// 		d.cycleCount +
-								// 			" cycle" +
-								// 			(d.cycleCount !== 1 ? "s" : "") +
-								// 			" · " +
-								// 			d.langCount +
-								// 			" lang" +
-								// 			(d.langCount !== 1 ? "s" : ""),
-								// 	);
+								drawNodeLabel(g2, d.name, { fontSize: 13, maxCharsPerLine: 16, maxLines: 2, lineHeight: 1.05 });
 							}
 						});
 
 						const tooltip = document.getElementById("tooltip");
 						const ttName = tooltip.querySelector(".name");
 						const ttCycles = tooltip.querySelector(".cycles");
-						const ttLangs = tooltip.querySelector(".langs");
 
 						function showTooltip(d, isSelected) {
 							ttName.textContent = d.name;
 							ttCycles.textContent = "Participation: " + (d.cycles.length ? d.cycles.join(", ") : "—");
-							ttLangs.innerHTML = nativeLabel(d) || "—";
 							const flagEl = tooltip.querySelector(".flag-holder");
 							if (isSelected) {
 								const code = COUNTRY_TO_ISO[d.name];
@@ -628,8 +573,18 @@
 								"collide",
 								d3.forceCollide().radius((d) => d.radius),
 							)
-							.force("x", d3.forceX(w / 2).strength(0.01))
-							.force("y", d3.forceY(h / 2.8).strength(0.05))
+							.force(
+								"x",
+								d3
+									.forceX((d) => (orderedMode ? d.targetX : w / 2))
+									.strength(orderedMode ? 0.35 : 0.01),
+							)
+							.force(
+								"y",
+								d3
+									.forceY((d) => (orderedMode ? d.targetY : h / 2.8))
+									.strength(orderedMode ? 0.35 : 0.1),
+							)
 							.on("tick", () => {
 								g.attr("transform", (d) => {
 									const s = d.id === state.selectedId ? 1.2 : 1;
@@ -662,6 +617,13 @@
 						state.selectedId = null;
 						runViz();
 					});
+
+						document.getElementById("layout-toggle").addEventListener("click", (e) => {
+							state.layoutMode = state.layoutMode === "cluster" ? "ordered" : "cluster";
+							e.currentTarget.classList.toggle("on", state.layoutMode === "ordered");
+							e.currentTarget.textContent = state.layoutMode === "ordered" ? "Cluster Layout" : "Ordered Layout";
+							runViz();
+						});
 
 					window.addEventListener("resize", () => runViz());
 					window.addEventListener("load", () => runViz());
