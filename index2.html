@@ -65,53 +65,51 @@
 				justify-content: center;
 				gap: 10px;
 				padding: 10px 24px 12px;
-				flex-wrap: wrap;
-				max-width: 800px;
+				flex-wrap: nowrap;
+				max-width: 1100px;
 				margin: 0 auto;
+				overflow-x: auto;
+				white-space: nowrap;
 			}
-			#filter-bar span {
-				padding: 6px 14px;
-				border-radius: 8px;
+			#filter-bar label {
 				font-size: 0.85rem;
-				cursor: pointer;
-				background: #f0f0f0;
 				color: #555;
-				border: 1px solid #e0e0e0;
-				transition: all 0.15s;
+				white-space: nowrap;
 			}
-			#filter-bar span:hover {
-				background: #e8e8e8;
-				color: #222;
-			}
-			#filter-bar span.on {
-				background: rgba(184, 55, 38, 0.12);
-				color: var(--dominant);
-				border-color: rgba(184, 55, 38, 0.35);
-			}
-			#filter-bar input#search {
-				padding: 6px 12px;
-				font-family: inherit;
-				font-size: 0.85rem;
-				border: 1px solid #e0e0e0;
-				border-radius: 8px;
-				background: #fff;
-				color: #333;
-				width: 160px;
-			}
-			#filter-bar input#search:focus {
-				outline: none;
-				border-color: var(--dominant);
-			}
+			#filter-bar select,
+			#filter-bar input#search,
 			#filter-bar button {
 				padding: 6px 14px;
 				border-radius: 8px;
 				font-size: 0.85rem;
+				border: 1px solid #e0e0e0;
+				font-family: inherit;
+				height: 36px;
+			}
+			#filter-bar select,
+			#filter-bar input#search {
+				background: #fff;
+				color: #333;
+			}
+			#filter-bar select {
+				min-width: 150px;
+				cursor: pointer;
+			}
+			#filter-bar select:focus,
+			#filter-bar input#search:focus {
+				outline: none;
+				border-color: var(--dominant);
+			}
+			#filter-bar input#search {
+				padding: 6px 12px;
+				width: 180px;
+			}
+			#filter-bar button {
 				cursor: pointer;
 				background: #f0f0f0;
 				color: #555;
-				border: 1px solid #e0e0e0;
-				font-family: inherit;
 				transition: all 0.15s;
+				flex: 0 0 auto;
 			}
 			#filter-bar button:hover {
 				background: #e8e8e8;
@@ -121,6 +119,146 @@
 				background: rgba(184, 55, 38, 0.12);
 				color: var(--dominant);
 				border-color: rgba(184, 55, 38, 0.35);
+			}
+			#participant-modal {
+				position: fixed;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+				background: rgba(37, 23, 19, 0.35);
+				backdrop-filter: blur(8px);
+				-webkit-backdrop-filter: blur(8px);
+				z-index: 200;
+				opacity: 0;
+				pointer-events: none;
+				transition: opacity 0.2s ease;
+			}
+			#participant-modal.open {
+				opacity: 1;
+				pointer-events: auto;
+			}
+			#participant-modal .modal-card {
+				width: min(1000px, 100%);
+				max-height: min(80vh, 820px);
+				overflow: hidden;
+				background: linear-gradient(180deg, #fffdfa 0%, #f8f1ec 100%);
+				border: 1px solid rgba(184, 55, 38, 0.16);
+				border-radius: 24px;
+				box-shadow: 0 24px 80px rgba(37, 23, 19, 0.18);
+				display: flex;
+				flex-direction: column;
+			}
+			#participant-modal .modal-header {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 16px;
+				padding: 22px 24px 16px;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.12);
+			}
+			#participant-modal .modal-title {
+				font-size: 1.35rem;
+				font-weight: 700;
+				color: #221917;
+			}
+			#participant-modal .modal-subtitle {
+				margin-top: 4px;
+				font-size: 0.92rem;
+				color: #735a55;
+			}
+			#participant-modal .close-modal {
+				flex: 0 0 auto;
+				width: 38px;
+				height: 38px;
+				border: none;
+				border-radius: 999px;
+				background: rgba(184, 55, 38, 0.08);
+				color: var(--dominant);
+				font-size: 1.4rem;
+				line-height: 1;
+				cursor: pointer;
+			}
+			#participant-modal .close-modal:hover {
+				background: rgba(184, 55, 38, 0.14);
+			}
+			#participant-modal .modal-body {
+				padding: 10px 24px 24px;
+				overflow: auto;
+			}
+			#participant-list {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				gap: 14px;
+			}
+			.participant-item {
+				padding: 16px 18px;
+				border-radius: 16px;
+				background: rgba(255, 255, 255, 0.82);
+				border: 1px solid rgba(184, 55, 38, 0.12);
+			}
+			.participant-name {
+				font-size: 1rem;
+				font-weight: 700;
+				margin-bottom: 10px;
+			}
+			.participant-name a {
+				color: #241714;
+				text-decoration: none;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.25);
+				transition: color 0.15s ease, border-color 0.15s ease;
+			}
+			.participant-name a:hover {
+				color: var(--dominant);
+				border-color: rgba(184, 55, 38, 0.6);
+			}
+			.participant-meta {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				gap: 12px;
+				font-size: 0.82rem;
+				color: #6b5752;
+				margin-bottom: 8px;
+			}
+			.participant-dots {
+				display: inline-flex;
+				gap: 5px;
+				flex-wrap: wrap;
+			}
+			.participant-dots span {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: rgba(184, 55, 38, 0.22);
+			}
+			.participant-dots span.on {
+				background: var(--dominant);
+			}
+			.participant-languages {
+				font-size: 0.82rem;
+				line-height: 1.4;
+				color: #453634;
+			}
+			.participant-empty {
+				padding: 24px;
+				text-align: center;
+				color: #735a55;
+				font-size: 0.95rem;
+			}
+			@media (max-width: 640px) {
+				#participant-modal {
+					padding: 12px;
+				}
+				#participant-modal .modal-header,
+				#participant-modal .modal-body {
+					padding-left: 16px;
+					padding-right: 16px;
+				}
+				#participant-list {
+					grid-template-columns: 1fr;
+				}
 			}
 			#tooltip {
 				position: fixed;
@@ -239,18 +377,36 @@
 			shape = # of languages · Color = # Assessment Languages drag to move
 		</div>
 		<div id="filter-bar">
-			<span data-cycle="all" class="on">All</span>
-			<span data-cycle="P21">P21</span>
-			<span data-cycle="P21 Delayed">P21 Delayed</span>
-			<span data-cycle="P16">P16</span>
-			<span data-cycle="P11">P11</span>
-			<span data-cycle="P06">P06</span>
-			<span data-cycle="P01">P01</span>
+			<label for="cycle-filter">Cycle Filter: </label>
+			<select id="cycle-filter">
+				<option value="all">All</option>
+				<option value="P21">P21</option>
+				<option value="P21 Delayed">P21 Delayed</option>
+				<option value="P16">P16</option>
+				<option value="P11">P11</option>
+				<option value="P06">P06</option>
+				<option value="P01">P01</option>
+			</select>
 			<button id="layout-toggle" type="button">Ordered Layout</button>
-			<label for="search" style="margin-left: 24px; margin-right: 8px; font-size: 0.85rem; color: #555">Search</label>
+			<button id="participant-list-toggle" type="button">Participant List</button>
+			<label for="search">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
 		</div>
 		<div id="viz"></div>
+		<div id="participant-modal" aria-hidden="true">
+			<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="participant-modal-title">
+				<div class="modal-header">
+					<div>
+						<div class="modal-title" id="participant-modal-title">Participant Countries</div>
+						<div class="modal-subtitle" id="participant-modal-subtitle">Alphabetical list of current participants</div>
+					</div>
+					<button class="close-modal" type="button" aria-label="Close participant list">&times;</button>
+				</div>
+				<div class="modal-body">
+					<div id="participant-list"></div>
+				</div>
+			</div>
+		</div>
 		<div id="tooltip">
 			<div class="card">
 				<div class="flag-holder"></div>
@@ -353,6 +509,21 @@
 					};
 
 					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
+					const participantModal = document.getElementById("participant-modal");
+					const participantListEl = document.getElementById("participant-list");
+					const participantModalSubtitle = document.getElementById("participant-modal-subtitle");
+
+					function escapeHtml(value) {
+						return String(value ?? "").replace(/[&<>"']/g, (char) => {
+							return {
+								"&": "&amp;",
+								"<": "&lt;",
+								">": "&gt;",
+								'"': "&quot;",
+								"'": "&#39;",
+							}[char];
+						});
+					}
 
 					function filteredData() {
 						let list = state.cycleFilter === "all" ? DATA : DATA.filter((d) => d.cycles.includes(state.cycleFilter));
@@ -361,6 +532,49 @@
 							list = list.filter((d) => d.name.toLowerCase().includes(q));
 						}
 						return list;
+					}
+
+					function buildParticipantDots(count, maxCount) {
+						return Array.from({ length: maxCount }, (_, i) => '<span class="' + (i < count ? "on" : "") + '"></span>').join("");
+					}
+
+					function renderParticipantList() {
+						const list = [...filteredData()].sort((a, b) => a.name.localeCompare(b.name));
+						const maxCycles = d3.max(DATA, (d) => d.cycleCount) || 1;
+						const filterLabel = state.cycleFilter === "all" ? "All cycles" : state.cycleFilter;
+						
+
+						if (!list.length) {
+							participantListEl.innerHTML = '<div class="participant-empty">No countries match the current filter.</div>';
+							return;
+						}
+
+						participantListEl.innerHTML = list
+							.map((d) => {
+								const languagesText = d.languages.length ? d.languages.join(", ") : "No languages listed";
+								return `
+									<div class="participant-item">
+										<div class="participant-name"><a href="https:" target="_blank" rel="noreferrer">${escapeHtml(d.name)}</a></div>
+										<div class="participant-meta">
+											<span>${d.cycleCount} participation${d.cycleCount === 1 ? "" : "s"}</span>
+											<span class="participant-dots" aria-hidden="true">${buildParticipantDots(d.cycleCount, maxCycles)}</span>
+										</div>
+										<div class="participant-languages">${d.langCount} assessment language${d.langCount === 1 ? "" : "s"}: ${escapeHtml(languagesText)}</div>
+									</div>
+								`;
+							})
+							.join("");
+					}
+
+					function openParticipantModal() {
+						renderParticipantList();
+						participantModal.classList.add("open");
+						participantModal.setAttribute("aria-hidden", "false");
+					}
+
+					function closeParticipantModal() {
+						participantModal.classList.remove("open");
+						participantModal.setAttribute("aria-hidden", "true");
 					}
 
 					function orderedTarget(i, w, h, total) {
@@ -442,6 +656,7 @@
 						const h = Math.max(el.clientHeight || 500, 300);
 						const orderedMode = state.layoutMode === "ordered";
 						const list = filteredData();
+						if (participantModal.classList.contains("open")) renderParticipantList();
 						const orderedList = orderedMode
 							? [...list].sort((a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name))
 							: list;
@@ -602,14 +817,10 @@
 						});
 					}
 
-					document.querySelectorAll("#filter-bar span[data-cycle]").forEach((el) => {
-						el.addEventListener("click", () => {
-							document.querySelectorAll("#filter-bar span[data-cycle]").forEach((s) => s.classList.remove("on"));
-							el.classList.add("on");
-							state.cycleFilter = el.dataset.cycle;
-							state.selectedId = null;
-							runViz();
-						});
+					document.getElementById("cycle-filter").addEventListener("change", (e) => {
+						state.cycleFilter = e.target.value;
+						state.selectedId = null;
+						runViz();
 					});
 
 					document.getElementById("search").addEventListener("input", (e) => {
@@ -618,12 +829,28 @@
 						runViz();
 					});
 
-						document.getElementById("layout-toggle").addEventListener("click", (e) => {
-							state.layoutMode = state.layoutMode === "cluster" ? "ordered" : "cluster";
-							e.currentTarget.classList.toggle("on", state.layoutMode === "ordered");
-							e.currentTarget.textContent = state.layoutMode === "ordered" ? "Cluster Layout" : "Ordered Layout";
-							runViz();
-						});
+					document.getElementById("layout-toggle").addEventListener("click", (e) => {
+						state.layoutMode = state.layoutMode === "cluster" ? "ordered" : "cluster";
+						e.currentTarget.classList.toggle("on", state.layoutMode === "ordered");
+						e.currentTarget.textContent = state.layoutMode === "ordered" ? "Cluster Layout" : "Ordered Layout";
+						runViz();
+					});
+
+					document.getElementById("participant-list-toggle").addEventListener("click", () => {
+						openParticipantModal();
+					});
+
+					participantModal.querySelector(".close-modal").addEventListener("click", () => {
+						closeParticipantModal();
+					});
+
+					participantModal.addEventListener("click", (e) => {
+						if (e.target === participantModal) closeParticipantModal();
+					});
+
+					window.addEventListener("keydown", (e) => {
+						if (e.key === "Escape") closeParticipantModal();
+					});
 
 					window.addEventListener("resize", () => runViz());
 					window.addEventListener("load", () => runViz());
