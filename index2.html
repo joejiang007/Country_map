@@ -36,9 +36,7 @@
 				color: #333;
 			}
 			.header .brand {
-				font-family:
-					"Lato",
-					sans-serif;
+				font-family: "Lato", sans-serif;
 				color: var(--dominant);
 				font-weight: 800;
 				font-size: 3rem;
@@ -610,7 +608,9 @@
 					}
 
 					function splitLabel(text, maxCharsPerLine, maxLines) {
-						const words = String(text || "").split(/\s+/).filter(Boolean);
+						const words = String(text || "")
+							.split(/\s+/)
+							.filter(Boolean);
 						const lines = [];
 						let current = "";
 
@@ -656,7 +656,6 @@
 						const h = Math.max(el.clientHeight || 500, 300);
 						const orderedMode = state.layoutMode === "ordered";
 						const list = filteredData();
-						if (participantModal.classList.contains("open")) renderParticipantList();
 						const orderedList = orderedMode
 							? [...list].sort((a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name))
 							: list;
@@ -788,18 +787,8 @@
 								"collide",
 								d3.forceCollide().radius((d) => d.radius),
 							)
-							.force(
-								"x",
-								d3
-									.forceX((d) => (orderedMode ? d.targetX : w / 2))
-									.strength(orderedMode ? 0.35 : 0.01),
-							)
-							.force(
-								"y",
-								d3
-									.forceY((d) => (orderedMode ? d.targetY : h / 2.8))
-									.strength(orderedMode ? 0.35 : 0.1),
-							)
+							.force("x", d3.forceX((d) => (orderedMode ? d.targetX : w / 2)).strength(orderedMode ? 0.5 : 0.01))
+							.force("y", d3.forceY((d) => (orderedMode ? d.targetY : h / 2.8)).strength(orderedMode ? 0.5 : 0.1))
 							.on("tick", () => {
 								g.attr("transform", (d) => {
 									const s = d.id === state.selectedId ? 1.2 : 1;
