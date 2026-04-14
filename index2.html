@@ -31,15 +31,15 @@
 				padding: 12px 24px 0;
 				font-size: 1.2rem;
 				font-family: "Lato", sans-serif;
-				font-weight: 300;
+				font-weight: 500;
 				letter-spacing: 0.02em;
 				color: #333;
 			}
 			.header .brand {
 				font-family: "Lato", sans-serif;
 				color: var(--dominant);
-				font-weight: 800;
-				font-size: 3rem;
+				font-weight: 600;
+				font-size: 2rem;
 			}
 			#viz {
 				width: 100%;
@@ -117,6 +117,96 @@
 				background: rgba(184, 55, 38, 0.12);
 				color: var(--dominant);
 				border-color: rgba(184, 55, 38, 0.35);
+			}
+			#legend {
+				max-width: 1100px;
+				margin: 0 auto;
+				padding: 4px 24px 14px;
+				display: flex;
+				justify-content: center;
+			}
+			#legend .legend-card {
+				width: min(860px, 100%);
+				padding: 16px 20px;
+				border-radius: 18px;
+				background: rgba(255, 250, 247, 0.92);
+				border: 1px solid rgba(184, 55, 38, 0.18);
+				box-shadow: 0 16px 36px rgba(37, 23, 19, 0.12);
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
+				font-size: 0.82rem;
+				color: #5d4540;
+				font-family: "Lato", sans-serif;
+				letter-spacing: 0.01em;
+				display: grid;
+				grid-template-columns: 110px minmax(260px, 300px) minmax(0, 1fr);
+				gap: 22px;
+				align-items: center;
+			}
+			.legend-title {
+				font-size: 0.72rem;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--dominant);
+				margin-bottom: 0;
+			}
+			.legend-label {
+				font-size: 0.76rem;
+				font-weight: 700;
+				color: black;
+				margin-bottom: 8px;
+			}
+			.legend-shapes {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 14px;
+			}
+			.legend-shape-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.legend-shape {
+				flex: 0 0 auto;
+				border: 1px solid rgba(184, 55, 38, 0.22);
+				background: #f2d0cb;
+			}
+			.legend-shape.circle {
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+			}
+			.legend-shape.card {
+				width: 46px;
+				height: 30px;
+				border-radius: 8px;
+			}
+			.legend-copy {
+				line-height: 1.35;
+			}
+			.legend-copy strong {
+				display: block;
+				font-size: 0.8rem;
+				color: #362522;
+			}
+			.legend-scale {
+				display: grid;
+				grid-template-columns: repeat(6, 1fr);
+				gap: 10px;
+			}
+			.legend-swatch-item {
+				text-align: center;
+			}
+			.legend-swatch {
+				height: 16px;
+				border-radius: 999px;
+				border: 1px solid rgba(184, 55, 38, 0.12);
+				margin-bottom: 4px;
+			}
+			.legend-swatch-label {
+				font-size: 0.68rem;
+				color: #765d58;
 			}
 			#participant-modal {
 				position: fixed;
@@ -205,7 +295,9 @@
 				color: #241714;
 				text-decoration: none;
 				border-bottom: 1px solid rgba(184, 55, 38, 0.25);
-				transition: color 0.15s ease, border-color 0.15s ease;
+				transition:
+					color 0.15s ease,
+					border-color 0.15s ease;
 			}
 			.participant-name a:hover {
 				color: var(--dominant);
@@ -246,6 +338,19 @@
 				font-size: 0.95rem;
 			}
 			@media (max-width: 640px) {
+				#legend {
+					padding: 0 12px 10px;
+				}
+				#legend .legend-card {
+					width: 100%;
+					padding: 12px 14px;
+					grid-template-columns: 1fr;
+					gap: 12px;
+					align-items: start;
+				}
+				.legend-shapes {
+					grid-template-columns: 1fr;
+				}
 				#participant-modal {
 					padding: 12px;
 				}
@@ -334,6 +439,16 @@
 			#tooltip.visible.selected .card .cycles {
 				font-size: 1.15rem;
 			}
+			#tooltip .card .languages {
+				max-width: 560px;
+				font-size: 0.92rem;
+				line-height: 1.45;
+				color: #5d4540;
+				margin-bottom: 10px;
+			}
+			#tooltip.visible.selected .card .languages {
+				font-size: 1rem;
+			}
 			#tooltip .link-holder {
 				margin-top: 12px;
 				width: 100%;
@@ -372,7 +487,7 @@
 	<body>
 		<div class="header">
 			<span class="brand">PIRLS 2026 Participants</span>
-			shape = # of languages · Color = # Assessment Languages drag to move
+			- Drag to move -
 		</div>
 		<div id="filter-bar">
 			<label for="cycle-filter">Cycle Filter: </label>
@@ -385,12 +500,68 @@
 				<option value="P06">P06</option>
 				<option value="P01">P01</option>
 			</select>
-			<button id="layout-toggle" type="button">Ordered Layout</button>
 			<button id="participant-list-toggle" type="button">Participant List</button>
+			<button id="layout-toggle" type="button">Ordered Layout</button>
+
 			<label for="search">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
 		</div>
-		<div id="viz"></div>
+		<div id="legend" aria-label="Chart legend">
+			<div class="legend-card">
+				<div class="legend-title">Legend</div>
+				<div class="legend-section">
+					<div class="legend-label">Shape = number of assessment languages</div>
+					<div class="legend-shapes">
+						<div class="legend-shape-item">
+							<div class="legend-shape circle" aria-hidden="true"></div>
+							<div class="legend-copy">
+								<strong>Circle</strong>
+								1 language
+							</div>
+						</div>
+						<div class="legend-shape-item">
+							<div class="legend-shape card" aria-hidden="true"></div>
+							<div class="legend-copy">
+								<strong>Card</strong>
+								2+ languages
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="legend-section">
+					<div class="legend-label">Color = number of assessments participated in</div>
+					<div class="legend-scale">
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #fdf2f1"></div>
+							<div class="legend-swatch-label">0</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #f9e4e1"></div>
+							<div class="legend-swatch-label">1</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #f2d0cb"></div>
+							<div class="legend-swatch-label">2</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #eab8b0"></div>
+							<div class="legend-swatch-label">3</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #d99689"></div>
+							<div class="legend-swatch-label">4</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #c76552"></div>
+							<div class="legend-swatch-label">5</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div id="viz-wrap">
+			<div id="viz"></div>
+		</div>
 		<div id="participant-modal" aria-hidden="true">
 			<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="participant-modal-title">
 				<div class="modal-header">
@@ -410,6 +581,7 @@
 				<div class="flag-holder"></div>
 				<div class="name"></div>
 				<div class="cycles"></div>
+				<div class="languages"></div>
 				<div class="country-link"><a href="">See Individual Country Page</a></div>
 			</div>
 		</div>
@@ -533,17 +705,20 @@
 					}
 
 					function buildParticipantDots(count, maxCount) {
-						return Array.from({ length: maxCount }, (_, i) => '<span class="' + (i < count ? "on" : "") + '"></span>').join("");
+						return Array.from(
+							{ length: maxCount },
+							(_, i) => '<span class="' + (i < count ? "on" : "") + '"></span>',
+						).join("");
 					}
 
 					function renderParticipantList() {
 						const list = [...filteredData()].sort((a, b) => a.name.localeCompare(b.name));
 						const maxCycles = d3.max(DATA, (d) => d.cycleCount) || 1;
 						const filterLabel = state.cycleFilter === "all" ? "All cycles" : state.cycleFilter;
-						
 
 						if (!list.length) {
-							participantListEl.innerHTML = '<div class="participant-empty">No countries match the current filter.</div>';
+							participantListEl.innerHTML =
+								'<div class="participant-empty">No countries match the current filter.</div>';
 							return;
 						}
 
@@ -588,9 +763,12 @@
 						};
 					}
 
-					const fillScale = d3
-						.scaleOrdinal(["#fdf2f1", "#f9e4e1", "#f2d0cb", "#eab8b0", "#df9a8f", "#d07866", "rgba(184,55,38,0.35)"])
-						.domain([0, 1, 2, 3, 4, 5, 6]);
+					const LANGUAGE_COLORS = ["#fdf2f1", "#f9e4e1", "#f2d0cb", "#eab8b0", "#d99689", "#c76552", "#b83726"];
+
+					function fillFor(d) {
+						const count = Math.max(0, d.cycleCount || 0);
+						return LANGUAGE_COLORS[Math.min(count, LANGUAGE_COLORS.length - 1)];
+					}
 
 					const SHAPES = ["card", "circle"];
 					function shapeFor(d) {
@@ -656,9 +834,12 @@
 						const h = Math.max(el.clientHeight || 500, 300);
 						const orderedMode = state.layoutMode === "ordered";
 						const list = filteredData();
-						const orderedList = orderedMode
-							? [...list].sort((a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name))
-							: list;
+						const orderedList =
+							orderedMode ?
+								[...list].sort(
+									(a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name),
+								)
+							:	list;
 
 						const nodes = orderedList.map((d, i) => {
 							const shape = shapeFor(d);
@@ -696,7 +877,7 @@
 							if (d.shape === "circle") {
 								g2.append("circle")
 									.attr("r", d.radiusCircle)
-									.attr("fill", fillScale(d.cycleCount))
+									.attr("fill", fillFor(d))
 									.attr("stroke", "rgba(184,55,38,0.2)")
 									.attr("stroke-width", 1);
 								drawNodeLabel(g2, d.name, { fontSize: 11, maxCharsPerLine: 9, maxLines: 3, lineHeight: 1.05 });
@@ -710,7 +891,7 @@
 									.attr("height", d.cardH)
 									.attr("rx", 8)
 									.attr("ry", 8)
-									.attr("fill", fillScale(d.cycleCount))
+									.attr("fill", fillFor(d))
 									.attr("stroke", "rgba(184,55,38,0.2)")
 									.attr("stroke-width", 1);
 								drawNodeLabel(g2, d.name, { fontSize: 13, maxCharsPerLine: 16, maxLines: 2, lineHeight: 1.05 });
@@ -720,10 +901,13 @@
 						const tooltip = document.getElementById("tooltip");
 						const ttName = tooltip.querySelector(".name");
 						const ttCycles = tooltip.querySelector(".cycles");
+						const ttLanguages = tooltip.querySelector(".languages");
 
 						function showTooltip(d, isSelected) {
 							ttName.textContent = d.name;
 							ttCycles.textContent = "Participation: " + (d.cycles.length ? d.cycles.join(", ") : "—");
+							ttLanguages.textContent =
+								"Assessment languages: " + (d.languages && d.languages.length ? d.languages.join(", ") : "—");
 							const flagEl = tooltip.querySelector(".flag-holder");
 							if (isSelected) {
 								const code = COUNTRY_TO_ISO[d.name];
