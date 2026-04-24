@@ -2,1055 +2,1039 @@
 <html lang="en">
 	<head>
 		<meta charset="UTF-8" />
-		<title>PIRLS 2026 Participation Map</title>
+		<title>PIRLS 2026 Participants</title>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&display=swap"
+			rel="stylesheet" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
+			rel="stylesheet" />
 		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-		<script src="https://cdn.jsdelivr.net/npm/d3-geo@3"></script>
 		<style>
+			:root {
+				--dominant: #b83726;
+			}
 			* {
 				box-sizing: border-box;
 			}
 			body {
 				margin: 0;
-				background: #0f1419;
-				font-family:
-					"DM Sans",
-					-apple-system,
-					BlinkMacSystemFont,
-					sans-serif;
-				overflow: hidden;
-				color: #e6edf3;
+				min-height: 100vh;
+				font-family: "Source Serif 4", Georgia, serif;
+				background: #fdfdfd;
+				color: #333;
 			}
-			#app {
-				position: relative;
-				width: 100vw;
-				height: 100vh;
+			.header {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				text-align: center;
+				padding: 12px 24px 0;
+				font-size: 1.2rem;
+				font-family: "Lato", sans-serif;
+				font-weight: 500;
+				letter-spacing: 0.02em;
+				color: #333;
 			}
-			svg {
-				display: block;
+			.header .brand {
+				font-family: "Lora", serif;
+				color: var(--dominant);
+				font-weight: 600;
+				font-size: 2rem;
+			}
+			#viz {
 				width: 100%;
-				height: 100%;
+				height: calc(100vh - 130px);
+			}
+			#viz .node {
 				cursor: grab;
 			}
-			svg:active {
+			#viz .node:active {
 				cursor: grabbing;
 			}
-			.country {
-				fill: #1c2128;
-				stroke: #30363d;
-				stroke-width: 0.3px;
-				transition:
-					fill 0.2s ease,
-					stroke 0.2s ease,
-					filter 0.2s ease;
+			#viz .card {
+				transition: filter 1.5s;
 			}
-			.country:hover {
-				filter: brightness(1.3);
+			#viz .node:hover .card {
+				filter: brightness(0.97);
 			}
-			.country.highlight {
-				stroke: #58a6ff;
-				stroke-width: 1.5px;
-				filter: brightness(1.25);
+			#filter-bar {
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+				padding: 10px 24px 12px;
+				flex-wrap: nowrap;
+				max-width: 1100px;
+				margin: 0 auto;
+				overflow-x: auto;
+				white-space: nowrap;
 			}
-			#tooltip {
-				position: fixed;
-				pointer-events: none;
-				background: rgba(22, 27, 34, 0.95);
-				border: 1px solid #30363d;
-				border-radius: 10px;
-				padding: 12px 16px;
-				font-size: 13px;
-				max-width: 320px;
-				box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-				opacity: 0;
-				transition:
-					opacity 0.15s ease,
-					transform 0.15s ease;
-				z-index: 100;
+			#filter-bar label {
+				font-size: 0.85rem;
+				color: #555;
+				white-space: nowrap;
 			}
-			#tooltip.visible {
-				opacity: 1;
+			#filter-bar select,
+			#filter-bar input#search,
+			#filter-bar button {
+				padding: 6px 14px;
+				border-radius: 8px;
+				font-size: 0.85rem;
+				border: 1px solid #e0e0e0;
+				font-family: inherit;
+				height: 36px;
 			}
-			#tooltip h3 {
-				margin: 0 0 8px 0;
-				font-size: 15px;
-				color: #58a6ff;
+			#filter-bar select,
+			#filter-bar input#search {
+				background: #fff;
+				color: #333;
 			}
-			#tooltip .cycles {
-				color: #8b949e;
+			#filter-bar select {
+				min-width: 150px;
+				cursor: pointer;
+			}
+			#filter-bar select:focus,
+			#filter-bar input#search:focus {
+				outline: none;
+				border-color: var(--dominant);
+			}
+			#filter-bar input#search {
+				padding: 6px 12px;
+				width: 180px;
+			}
+			#filter-bar button {
+				cursor: pointer;
+				background: #f0f0f0;
+				color: #555;
+				transition: all 0.15s;
+				flex: 0 0 auto;
+			}
+			#filter-bar button:hover {
+				background: #e8e8e8;
+				color: #222;
+			}
+			#filter-bar button.on {
+				background: rgba(184, 55, 38, 0.12);
+				color: var(--dominant);
+				border-color: rgba(184, 55, 38, 0.35);
+			}
+			#legend {
+				max-width: 1100px;
+				margin: 0 auto;
+				padding: 4px 24px 14px;
+				display: flex;
+				justify-content: center;
+			}
+			#legend .legend-card {
+				width: min(860px, 100%);
+				padding: 16px 20px;
+				border-radius: 18px;
+				background: rgba(255, 250, 247, 0.92);
+				border: 1px solid rgba(184, 55, 38, 0.18);
+				box-shadow: 0 16px 36px rgba(37, 23, 19, 0.12);
+				backdrop-filter: blur(10px);
+				-webkit-backdrop-filter: blur(10px);
+				font-size: 0.82rem;
+				color: #5d4540;
+				font-family: "Lato", sans-serif;
+				letter-spacing: 0.01em;
+				display: grid;
+				grid-template-columns: 110px minmax(260px, 300px) minmax(0, 1fr);
+				gap: 22px;
+				align-items: center;
+			}
+			.legend-title {
+				font-size: 0.72rem;
+				font-weight: 700;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				color: var(--dominant);
+				margin-bottom: 0;
+			}
+			.legend-label {
+				font-size: 0.76rem;
+				font-weight: 700;
+				color: black;
+				margin-bottom: 8px;
+			}
+			.legend-shapes {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 14px;
+			}
+			.legend-shape-item {
+				display: flex;
+				align-items: center;
+				gap: 10px;
+			}
+			.legend-shape {
+				flex: 0 0 auto;
+				border: 1px solid rgba(184, 55, 38, 0.22);
+				background: #f2d0cb;
+			}
+			.legend-shape.circle {
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+			}
+			.legend-shape.card {
+				width: 46px;
+				height: 30px;
+				border-radius: 8px;
+			}
+			.legend-copy {
+				line-height: 1.35;
+			}
+			.legend-copy strong {
+				display: block;
+				font-size: 0.8rem;
+				color: #362522;
+			}
+			.legend-scale {
+				display: grid;
+				grid-template-columns: repeat(6, 1fr);
+				gap: 10px;
+			}
+			.legend-swatch-item {
+				text-align: center;
+			}
+			.legend-swatch {
+				height: 16px;
+				border-radius: 999px;
+				border: 1px solid rgba(184, 55, 38, 0.12);
 				margin-bottom: 4px;
 			}
-			#tooltip .languages {
-				color: #7ee787;
-				font-size: 12px;
+			.legend-swatch-label {
+				font-size: 0.68rem;
+				color: #765d58;
 			}
-			#panel {
+			#participant-modal {
 				position: fixed;
-				top: 20px;
-				right: 20px;
-				width: 320px;
-				max-height: calc(100vh - 40px);
-				overflow-y: auto;
-				background: rgba(22, 27, 34, 0.96);
-				border: 1px solid #30363d;
-				border-radius: 12px;
-				padding: 20px;
-				box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-				z-index: 50;
+				inset: 0;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				padding: 24px;
+				background: rgba(37, 23, 19, 0.35);
+				backdrop-filter: blur(8px);
+				-webkit-backdrop-filter: blur(8px);
+				z-index: 200;
 				opacity: 0;
 				pointer-events: none;
 				transition: opacity 0.2s ease;
 			}
-			#panel.visible {
+			#participant-modal.open {
 				opacity: 1;
 				pointer-events: auto;
 			}
-			#panel h2 {
-				margin: 0 0 12px 0;
-				font-size: 20px;
-				color: #58a6ff;
+			#participant-modal .modal-card {
+				width: min(1000px, 100%);
+				max-height: min(80vh, 820px);
+				overflow: hidden;
+				background: linear-gradient(180deg, #fffdfa 0%, #f8f1ec 100%);
+				border: 1px solid rgba(184, 55, 38, 0.16);
+				border-radius: 24px;
+				box-shadow: 0 24px 80px rgba(37, 23, 19, 0.18);
+				display: flex;
+				flex-direction: column;
 			}
-			#panel .meta {
-				color: #8b949e;
-				font-size: 13px;
-				margin-bottom: 12px;
+			#participant-modal .modal-header {
+				display: flex;
+				align-items: flex-start;
+				justify-content: space-between;
+				gap: 16px;
+				padding: 22px 24px 16px;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.12);
 			}
-			#panel .cycle-list {
-				font-size: 13px;
-				line-height: 1.6;
+			#participant-modal .modal-title {
+				font-size: 1.35rem;
+				font-weight: 700;
+				color: #221917;
 			}
-			#panel .cycle-list span {
-				display: inline-block;
-				margin-right: 8px;
-				margin-bottom: 4px;
-				padding: 2px 8px;
-				background: #21262d;
-				border-radius: 6px;
+			#participant-modal .modal-subtitle {
+				margin-top: 4px;
+				font-size: 0.92rem;
+				color: #735a55;
 			}
-			#panel .close {
-				margin-top: 16px;
+			#participant-modal .close-modal {
+				flex: 0 0 auto;
+				width: 38px;
+				height: 38px;
+				border: none;
+				border-radius: 999px;
+				background: rgba(184, 55, 38, 0.08);
+				color: var(--dominant);
+				font-size: 1.4rem;
+				line-height: 1;
 				cursor: pointer;
-				color: #58a6ff;
-				font-size: 13px;
 			}
-			#panel .close:hover {
-				text-decoration: underline;
+			#participant-modal .close-modal:hover {
+				background: rgba(184, 55, 38, 0.14);
 			}
-			#legend {
-				position: fixed;
-				bottom: 24px;
-				left: 24px;
-				background: rgba(22, 27, 34, 0.92);
-				border: 1px solid #30363d;
-				border-radius: 10px;
-				padding: 14px 18px;
-				z-index: 50;
+			#participant-modal .modal-body {
+				padding: 10px 24px 24px;
+				overflow: auto;
 			}
-			#legend h4 {
-				margin: 0 0 10px 0;
-				font-size: 12px;
-				color: #8b949e;
-				text-transform: uppercase;
-				letter-spacing: 0.05em;
+			#participant-list {
+				display: grid;
+				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+				gap: 14px;
 			}
-			#legend .scale {
+			.participant-item {
+				padding: 16px 18px;
+				border-radius: 16px;
+				background: rgba(255, 255, 255, 0.82);
+				border: 1px solid rgba(184, 55, 38, 0.12);
+			}
+			.participant-name {
+				font-size: 1rem;
+				font-weight: 700;
+				margin-bottom: 10px;
+			}
+			.participant-name a {
+				color: #241714;
+				text-decoration: none;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.25);
+				transition:
+					color 0.15s ease,
+					border-color 0.15s ease;
+			}
+			.participant-name a:hover {
+				color: var(--dominant);
+				border-color: rgba(184, 55, 38, 0.6);
+			}
+			.participant-meta {
 				display: flex;
 				align-items: center;
-				gap: 8px;
-				font-size: 11px;
-				color: #8b949e;
+				justify-content: space-between;
+				gap: 12px;
+				font-size: 0.82rem;
+				color: #6b5752;
+				margin-bottom: 8px;
 			}
-			#legend .scale div {
-				width: 24px;
-				height: 14px;
-				border-radius: 4px;
-			}
-			#filter {
-				position: fixed;
-				top: 20px;
-				left: 20px;
-				display: flex;
+			.participant-dots {
+				display: inline-flex;
+				gap: 5px;
 				flex-wrap: wrap;
-				gap: 8px;
-				z-index: 50;
 			}
-			#filter button {
-				padding: 8px 14px;
-				border: 1px solid #30363d;
-				border-radius: 8px;
-				background: rgba(22, 27, 34, 0.9);
-				color: #e6edf3;
-				font-size: 12px;
-				cursor: pointer;
-				transition:
-					background 0.2s,
-					border-color 0.2s;
+			.participant-dots span {
+				width: 10px;
+				height: 10px;
+				border-radius: 50%;
+				background: rgba(184, 55, 38, 0.22);
 			}
-			#filter button:hover {
-				background: #21262d;
-				border-color: #58a6ff;
+			.participant-dots span.on {
+				background: var(--dominant);
 			}
-			#filter button.active {
-				background: #238636;
-				border-color: #2ea043;
+			.participant-languages {
+				font-size: 0.82rem;
+				line-height: 1.4;
+				color: #453634;
 			}
-			#title {
+			.participant-empty {
+				padding: 24px;
+				text-align: center;
+				color: #735a55;
+				font-size: 0.95rem;
+			}
+			@media (max-width: 640px) {
+				#legend {
+					padding: 0 12px 10px;
+				}
+				#legend .legend-card {
+					width: 100%;
+					padding: 12px 14px;
+					grid-template-columns: 1fr;
+					gap: 12px;
+					align-items: start;
+				}
+				.legend-shapes {
+					grid-template-columns: 1fr;
+				}
+				#participant-modal {
+					padding: 12px;
+				}
+				#participant-modal .modal-header,
+				#participant-modal .modal-body {
+					padding-left: 16px;
+					padding-right: 16px;
+				}
+				#participant-list {
+					grid-template-columns: 1fr;
+				}
+			}
+			#tooltip {
 				position: fixed;
-				top: 20px;
-				left: 50%;
-				transform: translateX(-50%);
-				font-size: 18px;
+				left: 40%;
+				right: 0;
+				bottom: 0;
+				width: 20%;
+				pointer-events: none;
+				z-index: 100;
+				transform: translateY(100%);
+				transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+			}
+			#tooltip.visible {
+				transform: translateY(0);
+			}
+			#tooltip.visible .card {
+				pointer-events: none;
+			}
+			#tooltip.visible.selected .card {
+				pointer-events: auto;
+				min-height: 50vh;
+			}
+			#tooltip .card {
+				width: 100%;
+				min-height: 300px;
+				transition: min-height 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+				background: rgba(255, 255, 255, 0.92);
+				backdrop-filter: blur(16px);
+				-webkit-backdrop-filter: blur(16px);
+				border-top: 1px solid rgba(184, 55, 38, 0.25);
+				padding: 28px 48px 32px;
+				box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.08);
+				box-sizing: border-box;
+				border-radius: 60px 60px 0 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				text-align: center;
+			}
+			#tooltip .card .flag-holder {
+				margin-bottom: 12px;
+				min-height: 0;
+			}
+			#tooltip .card .flag-holder:empty {
+				display: none;
+			}
+			#tooltip .card .flag-holder img {
+				width: 64px;
+				height: 48px;
+				object-fit: cover;
+				border-radius: 4px;
+				box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+			}
+			#tooltip.visible.selected .card .flag-holder img {
+				width: 88px;
+				height: 66px;
+			}
+			#tooltip .card .name {
+				font-size: 1.4rem;
 				font-weight: 600;
-				color: #e6edf3;
-				z-index: 40;
+				color: #1a1a1a;
+				margin-bottom: 8px;
+				transition: font-size 0.4s ease;
+			}
+			#tooltip.visible.selected .card .name {
+				font-size: 1.9rem;
+			}
+			#tooltip .card .cycles {
+				font-size: 0.95rem;
+				color: #555;
+				margin-bottom: 8px;
+				transition: font-size 0.4s ease;
+			}
+			#tooltip.visible.selected .card .cycles {
+				font-size: 1.15rem;
+			}
+			#tooltip .card .languages {
+				max-width: 560px;
+				font-size: 0.92rem;
+				line-height: 1.45;
+				color: #5d4540;
+				margin-bottom: 10px;
+			}
+			#tooltip.visible.selected .card .languages {
+				font-size: 1rem;
+			}
+			#tooltip .link-holder {
+				margin-top: 12px;
+				width: 100%;
+				max-width: 400px;
+			}
+			#tooltip .link-holder label {
+				display: block;
+				font-size: 0.8rem;
+				color: var(--dominant);
+				margin-bottom: 6px;
+			}
+			#tooltip .link-holder input {
+				width: 100%;
+				padding: 8px 10px;
+				font-family: inherit;
+				font-size: 0.9rem;
+				border: 1px solid #ddd;
+				border-radius: 6px;
+				color: #333;
+				background: #fff;
+				box-sizing: border-box;
+			}
+			#tooltip .link-holder input::placeholder {
+				color: #999;
+			}
+			#tooltip .link-holder input:focus {
+				outline: none;
+				border-color: var(--dominant);
+			}
+			#viz g.node.dimmed {
+				opacity: 0.25;
 				pointer-events: none;
 			}
 		</style>
 	</head>
 	<body>
-		<div id="app"></div>
-		<div id="tooltip"></div>
-		<div id="panel"></div>
-		<div id="legend">
-			<h4>Participation cycles</h4>
-			<div class="scale">
-				<div style="background: #161b22"></div>
-				<div style="background: #0e4429"></div>
-				<div style="background: #006d32"></div>
-				<div style="background: #26a641"></div>
-				<div style="background: #39d353"></div>
-				<span>0 → 6+</span>
+		<div class="header">
+			<span class="brand">PIRLS 2026 Participants</span>
+		</div>
+		<div id="filter-bar">
+			<label for="cycle-filter">Cycle Filter: </label>
+			<select id="cycle-filter">
+				<option value="all">All</option>
+				<option value="P21">P21</option>
+				<option value="P21 Delayed">P21 Delayed</option>
+				<option value="P16">P16</option>
+				<option value="P11">P11</option>
+				<option value="P06">P06</option>
+				<option value="P01">P01</option>
+			</select>
+			<button id="participant-list-toggle" type="button">Participant List</button>
+			<button id="layout-toggle" type="button">Ordered Layout</button>
+
+			<label for="search">Search</label>
+			<input type="text" id="search" placeholder="Country name..." />
+		</div>
+		<div id="legend" aria-label="Chart legend">
+			<div class="legend-card">
+				<div class="legend-title">Legend</div>
+				<div class="legend-section">
+					<div class="legend-label">Shape = number of assessment languages</div>
+					<div class="legend-shapes">
+						<div class="legend-shape-item">
+							<div class="legend-shape circle" aria-hidden="true"></div>
+							<div class="legend-copy">
+								<strong>Circle</strong>
+								1 language
+							</div>
+						</div>
+						<div class="legend-shape-item">
+							<div class="legend-shape card" aria-hidden="true"></div>
+							<div class="legend-copy">
+								<strong>Card</strong>
+								2+ languages
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="legend-section">
+					<div class="legend-label">Color = number of assessments participated in</div>
+					<div class="legend-scale">
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #fdf2f1"></div>
+							<div class="legend-swatch-label">0</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #f9e4e1"></div>
+							<div class="legend-swatch-label">1</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #f2d0cb"></div>
+							<div class="legend-swatch-label">2</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #eab8b0"></div>
+							<div class="legend-swatch-label">3</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #d99689"></div>
+							<div class="legend-swatch-label">4</div>
+						</div>
+						<div class="legend-swatch-item">
+							<div class="legend-swatch" style="background: #c76552"></div>
+							<div class="legend-swatch-label">5</div>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
-		<div id="filter">
-			<button data-cycle="all" class="active">All</button>
-			<button data-cycle="P21">P21</button>
-			<button data-cycle="P16">P16</button>
-			<button data-cycle="P11">P11</button>
-			<button data-cycle="P06">P06</button>
-			<button data-cycle="P01">P01</button>
+		<div id="viz-wrap">
+			<div id="viz"></div>
 		</div>
-		<div id="title">PIRLS 2026 participation by country</div>
+		<div id="participant-modal" aria-hidden="true">
+			<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="participant-modal-title">
+				<div class="modal-header">
+					<div>
+						<div class="modal-title" id="participant-modal-title">Participant Countries</div>
+						<div class="modal-subtitle" id="participant-modal-subtitle">Alphabetical list of current participants</div>
+					</div>
+					<button class="close-modal" type="button" aria-label="Close participant list">&times;</button>
+				</div>
+				<div class="modal-body">
+					<div id="participant-list"></div>
+				</div>
+			</div>
+		</div>
+		<div id="tooltip">
+			<div class="card">
+				<div class="flag-holder"></div>
+				<div class="name"></div>
+				<div class="cycles"></div>
+				<div class="languages"></div>
+				<div class="country-link"><a href="">See Individual Country Page</a></div>
+			</div>
+		</div>
 
 		<script>
-			// CSV-derived data (from CountryInfoforMap.csv)
-			const CSV_ROWS = [
-				{
-					Country: "Albania",
-					Benchmarker: "",
-					"Participated P21 ": "",
-					"Participated P21 Delayed": "",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Albanian",
-				},
-				{
-					Country: "Australia",
-					Benchmarker: "",
-					"Participated P21 ": "",
-					"Participated P21 Delayed": "",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "English",
-				},
-				{
-					Country: "Austria",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P21 Delayed": "",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "",
-					"P26 Assessment Languages": "German",
-				},
-				{
-					Country: "Azerbaijan",
-					Benchmarker: "",
-					"Participated P21 ": "",
-					"Participated P21 Delayed": "",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Azerbaijani, Russian",
-				},
-				{
-					Country: "Bahrain",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Belgium (Flemish)",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "X",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Dutch",
-				},
-				{
-					Country: "Belgium (French)",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "",
-					"P26 Assessment Languages": "French",
-				},
-				{
-					Country: "Brazil",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Portuguese",
-				},
-				{
-					Country: "Bulgaria",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Bulgarian",
-				},
-				{
-					Country: "Canada",
-					Benchmarker: "",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English, French",
-				},
-				{
-					Country: "Ontario, Canada",
-					Benchmarker: "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English, French",
-				},
-				{
-					Country: "Quebec, Canada",
-					Benchmarker: "X",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English, French",
-				},
-				{
-					Country: "Chinese Taipei",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Chinese",
-				},
-				{
-					Country: "Cyprus",
-					Benchmarker: "",
-					"Participated P21 ": "",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English, Greek",
-				},
-				{
-					Country: "Czech Republic",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Czech",
-				},
-				{
-					Country: "Denmark",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Danish",
-				},
-				{
-					Country: "England",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English",
-				},
-				{
-					Country: "Finland",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Finnish, Swedish",
-				},
-				{
-					Country: "France",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "French",
-				},
-				{
-					Country: "Georgia",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Georgian",
-				},
-				{
-					Country: "Germany",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Arabic, English, German, Turkish, Ukrainian",
-				},
-				{
-					Country: "Hong Kong SAR",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Chinese",
-				},
-				{
-					Country: "Hungary",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Hungarian",
-				},
-				{
-					Country: "Iran, Islamic Rep. of",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Persian",
-				},
-				{
-					Country: "Ireland",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "English, Irish",
-				},
-				{
-					Country: "Israel",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, Hebrew",
-				},
-				{
-					Country: "Italy",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Italian",
-				},
-				{
-					Country: "Jordan",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic",
-				},
-				{
-					Country: "Kazakhstan",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Kazakh, Russian",
-				},
-				{ Country: "Korea, Rep. of", Benchmarker: "", "P26 Assessment Languages": "Korean" },
-				{ Country: "Kuwait", Benchmarker: "", "P26 Assessment Languages": "Arabic, English" },
-				{
-					Country: "Latvia",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Latvian",
-				},
-				{
-					Country: "Lithuania",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Lithuanian, Polish, Russian",
-				},
-				{
-					Country: "Macao SAR",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Chinese, English, Portuguese",
-				},
-				{
-					Country: "Malta",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "English, Maltese",
-				},
-				{
-					Country: "Montenegro",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Montenegrin",
-				},
-				{
-					Country: "Morocco",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic",
-				},
-				{
-					Country: "Netherlands",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Dutch",
-				},
-				{
-					Country: "New Zealand",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "English",
-				},
-				{
-					Country: "North Macedonia",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Albanian, Macedonian",
-				},
-				{
-					Country: "Northern Ireland",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "English",
-				},
-				{
-					Country: "Norway",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Bokmal, Nynorsk, English",
-				},
-				{
-					Country: "Oman",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Poland",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Polish, Ukrainian",
-				},
-				{
-					Country: "Portugal",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Portuguese",
-				},
-				{
-					Country: "Qatar",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{ Country: "Romania", Benchmarker: "", "P26 Assessment Languages": "Romanian" },
-				{
-					Country: "Saudi Arabia",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{ Country: "Saudi Arabia (RCJY)", Benchmarker: "X", "P26 Assessment Languages": "Arabic, English" },
-				{
-					Country: "South Africa",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages":
-						"English, Afrikaans, IsiXhosa, IsiZulu, IsiNdebele, Sepedi, Sesotho, Setswana, Siswati, Tshivenda, Xitsonga",
-				},
-				{ Country: "Scotland", Benchmarker: "", "P26 Assessment Languages": "English" },
-				{
-					Country: "Serbia",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Serbian",
-				},
-				{
-					Country: "Singapore",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Chinese, English, Malay, Tamil",
-				},
-				{
-					Country: "Slovak Republic",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Hungarian, Slovak",
-				},
-				{
-					Country: "Slovenia",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Slovenian",
-				},
-				{
-					Country: "Spain",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Basque, Catalan, Galician, Spanish, Valencian",
-				},
-				{
-					Country: "Sweden",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "X",
-					"Participated P01": "X",
-					"P26 Assessment Languages": "Arabic, English, Swedish",
-				},
-				{ Country: "Tajikistan", Benchmarker: "", "P26 Assessment Languages": "Russian, Tajik" },
-				{
-					Country: "United Arab Emirates",
-					Benchmarker: "",
-					"Participated P21 Delayed": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Abu Dhabi, UAE",
-					Benchmarker: "X",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Dubai, UAE",
-					Benchmarker: "X",
-					"Participated P21 ": "X",
-					"Participated P16": "X",
-					"Participated P11": "X",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Sharjah, UAE",
-					Benchmarker: "X",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Arabic, English",
-				},
-				{
-					Country: "Uzbekistan",
-					Benchmarker: "",
-					"Participated P21 ": "X",
-					"Participated P16": "",
-					"Participated P11": "",
-					"Participated P06": "",
-					"Participated P01": "",
-					"P26 Assessment Languages": "Karakalpak, Russian, Uzbek",
-				},
-				{ Country: "Wales", Benchmarker: "", "P26 Assessment Languages": "English, Welsh" },
-			];
-
-			// Map CSV country name -> GeoJSON id (ISO 3166-1 alpha-3)
-			const COUNTRY_TO_ID = {
-				Albania: "ALB",
-				Australia: "AUS",
-				Austria: "AUT",
-				Azerbaijan: "AZE",
-				Bahrain: "BHR",
-				"Belgium (Flemish)": "BEL",
-				"Belgium (French)": "BEL",
-				Brazil: "BRA",
-				Bulgaria: "BGR",
-				Canada: "CAN",
-				"Ontario, Canada": "CAN",
-				"Quebec, Canada": "CAN",
-				"Chinese Taipei": "TWN",
-				Cyprus: "CYP",
-				"Czech Republic": "CZE",
-				Denmark: "DNK",
-				England: "GBR",
-				Finland: "FIN",
-				France: "FRA",
-				Georgia: "GEO",
-				Germany: "DEU",
-				"Hong Kong SAR": "HKG",
-				Hungary: "HUN",
-				"Iran, Islamic Rep. of": "IRN",
-				Ireland: "IRL",
-				Israel: "ISR",
-				Italy: "ITA",
-				Jordan: "JOR",
-				Kazakhstan: "KAZ",
-				"Korea, Rep. of": "KOR",
-				Kuwait: "KWT",
-				Latvia: "LVA",
-				Lithuania: "LTU",
-				"Macao SAR": "MAC",
-				Malta: "MLT",
-				Montenegro: "MNE",
-				Morocco: "MAR",
-				Netherlands: "NLD",
-				"New Zealand": "NZL",
-				"North Macedonia": "MKD",
-				"Northern Ireland": "GBR",
-				Norway: "NOR",
-				Oman: "OMN",
-				Poland: "POL",
-				Portugal: "PRT",
-				Qatar: "QAT",
-				Romania: "ROU",
-				"Saudi Arabia": "SAU",
-				"Saudi Arabia (RCJY)": "SAU",
-				"South Africa": "ZAF",
-				Scotland: "GBR",
-				Serbia: "SRB",
-				Singapore: "SGP",
-				"Slovak Republic": "SVK",
-				Slovenia: "SVN",
-				Spain: "ESP",
-				Sweden: "SWE",
-				Tajikistan: "TJK",
-				"United Arab Emirates": "ARE",
-				"Abu Dhabi, UAE": "ARE",
-				"Dubai, UAE": "ARE",
-				"Sharjah, UAE": "ARE",
-				Uzbekistan: "UZB",
-				Wales: "GBR",
-			};
-
-			const CYCLE_KEYS = [
-				"Participated P21 ",
-				"Participated P21 Delayed",
-				"Participated P16",
-				"Participated P11",
-				"Participated P06",
-				"Participated P01",
-			];
-
-			function parseRow(row) {
-				const cycles = [];
-				if (row["Participated P21 "] === "X") cycles.push("P21");
-				if (row["Participated P21 Delayed"] === "X") cycles.push("P21 Delayed");
-				if (row["Participated P16"] === "X") cycles.push("P16");
-				if (row["Participated P11"] === "X") cycles.push("P11");
-				if (row["Participated P06"] === "X") cycles.push("P06");
-				if (row["Participated P01"] === "X") cycles.push("P01");
-				return {
-					country: row.Country,
-					cycles,
-					count: cycles.length,
-					languages: (row["P26 Assessment Languages"] || "").trim(),
-					benchmarker: row.Benchmarker === "X",
-				};
-			}
-
-			// Aggregate by map id: max participation count and list of entities
-			function aggregateByCountry(rows) {
-				const byId = {};
-				for (const row of rows) {
-					const id = COUNTRY_TO_ID[row.Country];
-					if (!id) continue;
-					const parsed = parseRow(row);
-					if (!byId[id]) {
-						byId[id] = { count: 0, cycles: new Set(), entities: [], languages: parsed.languages };
+			d3.csv("CountryInfoforMap.csv")
+				.then(function (RAW) {
+					function parse(r) {
+						const cycles = [];
+						if (r["Participated P21 "] === "X") cycles.push("P21");
+						if (r["Participated P21 Delayed"] === "X") cycles.push("P21 Delayed");
+						if (r["Participated P16"] === "X") cycles.push("P16");
+						if (r["Participated P11"] === "X") cycles.push("P11");
+						if (r["Participated P06"] === "X") cycles.push("P06");
+						if (r["Participated P01"] === "X") cycles.push("P01");
+						const langStr = (r["P26 Assessment Languages"] || "").trim();
+						const languages = langStr ? langStr.split(/\s*,\s*/) : [];
+						return {
+							id: r.Country.replace(/\s+/g, "-").replace(/[(),]/g, ""),
+							name: r.Country,
+							cycles,
+							cycleCount: cycles.length,
+							languages,
+							langCount: languages.length,
+						};
 					}
-					byId[id].count = Math.max(byId[id].count, parsed.count);
-					parsed.cycles.forEach((c) => byId[id].cycles.add(c));
-					byId[id].entities.push({ name: row.Country, ...parsed });
-				}
-				return byId;
-			}
 
-			const countryData = aggregateByCountry(CSV_ROWS);
-			const colorScale = d3.scaleSequential(d3.interpolateGreens).domain([0, 6]);
+					const DATA = RAW.map((r) => ({ ...parse(r), _raw: r }));
 
-			const width = window.innerWidth;
-			const height = window.innerHeight;
-			const projection = d3
-				.geoMercator()
-				.scale(120)
-				.translate([width / 2, height / 2.1]);
-			const pathGenerator = d3.geoPath().projection(projection);
+					const COUNTRY_TO_ISO = {
+						Albania: "al",
+						Austria: "at",
+						Australia: "au",
+						Azerbaijan: "az",
+						Bahrain: "bh",
+						"Belgium (Flemish)": "be",
+						"Belgium (French)": "be",
+						Brazil: "br",
+						Bulgaria: "bg",
+						Canada: "ca",
+						"Ontario, Canada": "ca",
+						"Quebec, Canada": "ca",
+						"Chinese Taipei": "tw",
+						Cyprus: "cy",
+						"Czech Republic": "cz",
+						Denmark: "dk",
+						England: "gb",
+						Finland: "fi",
+						France: "fr",
+						Georgia: "ge",
+						Germany: "de",
+						"Hong Kong SAR": "hk",
+						Hungary: "hu",
+						"Iran, Islamic Rep. of": "ir",
+						Ireland: "ie",
+						Israel: "il",
+						Italy: "it",
+						Jordan: "jo",
+						Kazakhstan: "kz",
+						"Korea, Rep. of": "kr",
+						Kuwait: "kw",
+						Latvia: "lv",
+						Lithuania: "lt",
+						"Macao SAR": "mo",
+						Malta: "mt",
+						Montenegro: "me",
+						Morocco: "ma",
+						Netherlands: "nl",
+						"New Zealand": "nz",
+						"North Macedonia": "mk",
+						"Northern Ireland": "gb",
+						Norway: "no",
+						Oman: "om",
+						Poland: "pl",
+						Portugal: "pt",
+						Qatar: "qa",
+						Romania: "ro",
+						"Saudi Arabia": "sa",
+						"Saudi Arabia (RCJY)": "sa",
+						Scotland: "gb",
+						"South Africa": "za",
+						Serbia: "rs",
+						Singapore: "sg",
+						"Slovak Republic": "sk",
+						Slovenia: "si",
+						Spain: "es",
+						Sweden: "se",
+						Tajikistan: "tj",
+						"United Arab Emirates": "ae",
+						"Abu Dhabi, UAE": "ae",
+						"Dubai, UAE": "ae",
+						"Sharjah, UAE": "ae",
+						Uzbekistan: "uz",
+						Wales: "gb",
+					};
 
-			const svg = d3.select("#app").append("svg").attr("width", width).attr("height", height);
-			const g = svg.append("g");
+					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
+					const participantModal = document.getElementById("participant-modal");
+					const participantListEl = document.getElementById("participant-list");
+					const participantModalSubtitle = document.getElementById("participant-modal-subtitle");
 
-			let currentFilter = "all";
+					function escapeHtml(value) {
+						return String(value ?? "").replace(/[&<>"']/g, (char) => {
+							return {
+								"&": "&amp;",
+								"<": "&lt;",
+								">": "&gt;",
+								'"': "&quot;",
+								"'": "&#39;",
+							}[char];
+						});
+					}
 
-			// Close panel when clicking map background (not on a country)
-			svg.on("click", (e) => {
-				if (e.target.tagName !== "path") document.getElementById("panel").classList.remove("visible");
-			});
-			let zoom = d3
-				.zoom()
-				.scaleExtent([1, 8])
-				.on("zoom", (e) => g.attr("transform", e.transform));
-			svg.call(zoom);
+					function filteredData() {
+						let list = state.cycleFilter === "all" ? DATA : DATA.filter((d) => d.cycles.includes(state.cycleFilter));
+						if (state.search.trim()) {
+							const q = state.search.trim().toLowerCase();
+							list = list.filter((d) => d.name.toLowerCase().includes(q));
+						}
+						return list;
+					}
 
-			function cycleMatch(data, filter) {
-				if (filter === "all") return true;
-				return data && data.cycles && data.cycles.has(filter);
-			}
+					function buildParticipantDots(count, maxCount) {
+						return Array.from(
+							{ length: maxCount },
+							(_, i) => '<span class="' + (i < count ? "on" : "") + '"></span>',
+						).join("");
+					}
 
-			function fillFor(d) {
-				const data = countryData[d.id];
-				if (!data) return "#161b22";
-				if (!cycleMatch(data, currentFilter)) return "#161b22";
-				return colorScale(Math.min(6, data.count));
-			}
+					function renderParticipantList() {
+						const list = [...filteredData()].sort((a, b) => a.name.localeCompare(b.name));
+						const maxCycles = d3.max(DATA, (d) => d.cycleCount) || 1;
+						const filterLabel = state.cycleFilter === "all" ? "All cycles" : state.cycleFilter;
 
-			function render(world) {
-				const features = world.features.filter((d) => d.id !== "ATA"); // hide Antarctica for clarity
-				g.selectAll("path")
-					.data(features)
-					.join("path")
-					.attr("class", "country")
-					.attr("d", pathGenerator)
-					.attr("fill", (d) => fillFor(d))
-					.attr("data-id", (d) => d.id)
-					.on("mouseenter", (e, d) => {
-						const data = countryData[d.id];
-						d3.select(e.target).classed("highlight", true);
+						if (!list.length) {
+							participantListEl.innerHTML =
+								'<div class="participant-empty">No countries match the current filter.</div>';
+							return;
+						}
+
+						participantListEl.innerHTML = list
+							.map((d) => {
+								const languagesText = d.languages.length ? d.languages.join(", ") : "No languages listed";
+								return `
+									<div class="participant-item">
+										<div class="participant-name"><a href="https:" target="_blank" rel="noreferrer">${escapeHtml(d.name)}</a></div>
+										<div class="participant-meta">
+											<span>${d.cycleCount} participation${d.cycleCount === 1 ? "" : "s"}</span>
+											<span class="participant-dots" aria-hidden="true">${buildParticipantDots(d.cycleCount, maxCycles)}</span>
+										</div>
+										<div class="participant-languages">${d.langCount} assessment language${d.langCount === 1 ? "" : "s"}: ${escapeHtml(languagesText)}</div>
+									</div>
+								`;
+							})
+							.join("");
+					}
+
+					function openParticipantModal() {
+						renderParticipantList();
+						participantModal.classList.add("open");
+						participantModal.setAttribute("aria-hidden", "false");
+					}
+
+					function closeParticipantModal() {
+						participantModal.classList.remove("open");
+						participantModal.setAttribute("aria-hidden", "true");
+					}
+
+					function orderedTarget(i, w, h, total) {
+						const cols = Math.max(4, Math.floor((w - 80) / 150));
+						const rows = Math.max(1, Math.ceil(total / cols));
+						const xGap = Math.max(110, Math.min(170, (w - 80) / cols));
+						const yGap = Math.max(90, Math.min(135, (h - 80) / rows));
+						const col = i % cols;
+						const row = Math.floor(i / cols);
+						return {
+							x: 40 + xGap / 2 + col * xGap,
+							y: 40 + yGap / 2 + row * yGap,
+						};
+					}
+
+					const LANGUAGE_COLORS = ["#fdf2f1", "#f9e4e1", "#f2d0cb", "#eab8b0", "#d99689", "#c76552", "#b83726"];
+
+					function fillFor(d) {
+						const count = Math.max(0, d.cycleCount || 0);
+						return LANGUAGE_COLORS[Math.min(count, LANGUAGE_COLORS.length - 1)];
+					}
+
+					const SHAPES = ["card", "circle"];
+					function shapeFor(d) {
+						const n = d.langCount || 0;
+						if (n === 1) return "circle";
+						return "card";
+					}
+					function nodeRadius(d) {
+						const r = 28 + d.cycleCount * 1;
+						return Math.max(r, 36);
+					}
+					function cardSize(d) {
+						const base = 24 + d.cycleCount * 5;
+						return { w: Math.max(d.name.length * 5.5, 70) + base, h: base * 2.2 };
+					}
+
+					function splitLabel(text, maxCharsPerLine, maxLines) {
+						const words = String(text || "")
+							.split(/\s+/)
+							.filter(Boolean);
+						const lines = [];
+						let current = "";
+
+						words.forEach((word) => {
+							const next = current ? current + " " + word : word;
+							if (!current || next.length <= maxCharsPerLine) {
+								current = next;
+								return;
+							}
+							lines.push(current);
+							current = word;
+						});
+
+						if (current) lines.push(current);
+						if (!lines.length) lines.push(String(text || ""));
+						return lines.slice(0, maxLines);
+					}
+
+					function drawNodeLabel(group, text, options) {
+						const lines = splitLabel(text, options.maxCharsPerLine, options.maxLines);
+						const textEl = group
+							.append("text")
+							.attr("text-anchor", "middle")
+							.style("font-size", options.fontSize + "px")
+							.style("fill", "#0d0d0d")
+							.style("font-weight", 700);
+
+						const startY = -((lines.length - 1) * options.lineHeight) / 2;
+						lines.forEach((line, i) => {
+							textEl
+								.append("tspan")
+								.attr("x", 0)
+								.attr("dy", i === 0 ? startY + "em" : options.lineHeight + "em")
+								.text(line);
+						});
+					}
+
+					let sim = null;
+
+					function runViz() {
+						const el = document.getElementById("viz");
+						const w = Math.max(el.clientWidth || 800, 400);
+						const h = Math.max(el.clientHeight || 500, 300);
+						const orderedMode = state.layoutMode === "ordered";
+						const list = filteredData();
+						const orderedList =
+							orderedMode ?
+								[...list].sort(
+									(a, b) => b.cycleCount - a.cycleCount || b.langCount - a.langCount || a.name.localeCompare(b.name),
+								)
+							:	list;
+
+						const nodes = orderedList.map((d, i) => {
+							const shape = shapeFor(d);
+							const r = nodeRadius(d);
+							const cs = cardSize(d);
+							const target = orderedMode ? orderedTarget(i, w, h, orderedList.length) : { x: w / 2, y: h / 2.8 };
+							return {
+								...d,
+								shape,
+								radius: shape === "card" ? Math.max(cs.w, cs.h) / 2 + 4 : r + 4,
+								cardW: cs.w,
+								cardH: cs.h,
+								radiusCircle: r,
+								targetX: target.x,
+								targetY: target.y,
+								x: w / 2 + (Math.random() - 0.5) * w * 0.5,
+								y: h / 2 + (Math.random() - 0.5) * h * 0.5,
+							};
+						});
+
+						d3.select("#viz").selectAll("*").remove();
+						const svg = d3.select("#viz").append("svg").attr("width", w).attr("height", h);
+						svg.append("rect").attr("class", "viz-bg").attr("width", w).attr("height", h).attr("fill", "transparent");
+
+						const g = svg
+							.selectAll("g.node")
+							.data(nodes)
+							.join("g")
+							.attr("class", "node")
+							.attr("transform", (d) => "translate(" + d.x + "," + d.y + ")");
+
+						g.each(function (d) {
+							const sel = d3.select(this);
+							const g2 = sel.append("g").attr("class", "card");
+							if (d.shape === "circle") {
+								g2.append("circle")
+									.attr("r", d.radiusCircle)
+									.attr("fill", fillFor(d))
+									.attr("stroke", "rgba(184,55,38,0.2)")
+									.attr("stroke-width", 1);
+								drawNodeLabel(g2, d.name, { fontSize: 11, maxCharsPerLine: 9, maxLines: 3, lineHeight: 1.05 });
+							} else {
+								const w2 = d.cardW / 2;
+								const h2 = d.cardH / 2;
+								g2.append("rect")
+									.attr("x", -w2)
+									.attr("y", -h2)
+									.attr("width", d.cardW)
+									.attr("height", d.cardH)
+									.attr("rx", 8)
+									.attr("ry", 8)
+									.attr("fill", fillFor(d))
+									.attr("stroke", "rgba(184,55,38,0.2)")
+									.attr("stroke-width", 1);
+								drawNodeLabel(g2, d.name, { fontSize: 13, maxCharsPerLine: 16, maxLines: 2, lineHeight: 1.05 });
+							}
+						});
+
 						const tooltip = document.getElementById("tooltip");
-						tooltip.classList.add("visible");
-						const name = d.properties?.name || d.id;
-						let html = `<h3>${name}</h3>`;
-						if (data) {
-							const cycleList = [...data.cycles].sort().join(", ");
-							html += `<div class="cycles">Cycles: ${cycleList || "—"}</div>`;
-							html += `<div class="languages">${data.languages || ""}</div>`;
-						} else {
-							html += '<div class="cycles">No participation data</div>';
+						const ttName = tooltip.querySelector(".name");
+						const ttCycles = tooltip.querySelector(".cycles");
+						const ttLanguages = tooltip.querySelector(".languages");
+
+						function showTooltip(d, isSelected) {
+							ttName.textContent = d.name;
+							ttCycles.textContent = "Participation: " + (d.cycles.length ? d.cycles.join(", ") : "—");
+							ttLanguages.textContent =
+								"Assessment languages: " + (d.languages && d.languages.length ? d.languages.join(", ") : "—");
+							const flagEl = tooltip.querySelector(".flag-holder");
+							if (isSelected) {
+								const code = COUNTRY_TO_ISO[d.name];
+								if (code) {
+									flagEl.innerHTML = '<img src="https://flagcdn.com/w160/' + code + '.png" alt="" />';
+								} else {
+									flagEl.innerHTML = "";
+								}
+							} else {
+								flagEl.innerHTML = "";
+							}
+							tooltip.classList.add("visible");
+							tooltip.classList.toggle("selected", !!isSelected);
 						}
-						tooltip.innerHTML = html;
-						tooltip.style.left = `${e.pageX + 14}px`;
-						tooltip.style.top = `${e.pageY + 14}px`;
-					})
-					.on("mousemove", (e) => {
-						document.getElementById("tooltip").style.left = `${e.pageX + 14}px`;
-						document.getElementById("tooltip").style.top = `${e.pageY + 14}px`;
-					})
-					.on("mouseleave", (e) => {
-						d3.select(e.target).classed("highlight", false);
-						document.getElementById("tooltip").classList.remove("visible");
-					})
-					.on("click", (e, d) => {
-						const data = countryData[d.id];
-						const name = d.properties?.name || d.id;
-						const panel = document.getElementById("panel");
-						if (!data) {
-							panel.innerHTML = `<h2>${name}</h2><div class="meta">No participation data in dataset.</div><div class="close">Close</div>`;
-						} else {
-							const cycleList = [...data.cycles]
-								.sort()
-								.map((c) => `<span>${c}</span>`)
-								.join("");
-							const entitiesList = data.entities.map((e) => e.name).join(", ");
-							panel.innerHTML = `
-								<h2>${name}</h2>
-								<div class="meta">Entities: ${entitiesList}</div>
-								<div class="cycle-list">${cycleList}</div>
-								<div class="meta" style="margin-top:12px">Languages: ${data.languages}</div>
-								<div class="close">Close</div>
-							`;
-						}
-						panel.classList.add("visible");
-						panel.querySelector(".close").onclick = () => panel.classList.remove("visible");
+
+						g.on("mouseover", function (e, d) {
+							showTooltip(d, !!state.selectedId);
+						})
+							.on("mouseout", () => {
+								if (!state.selectedId) tooltip.classList.remove("visible");
+								else {
+									const sel = DATA.find((r) => r.id === state.selectedId);
+									if (sel) showTooltip(sel, true);
+								}
+							})
+							.on("click", (e, d) => {
+								e.stopPropagation();
+								state.selectedId = state.selectedId === d.id ? null : d.id;
+								g.classed("dimmed", (n) => state.selectedId !== null && n.id !== state.selectedId);
+								g.classed("selected", (n) => n.id === state.selectedId);
+								if (state.selectedId) {
+									const sel = DATA.find((r) => r.id === state.selectedId);
+									showTooltip(sel, true);
+								} else {
+									tooltip.classList.remove("visible", "selected");
+									g.classed("selected", false);
+								}
+							});
+
+						const drag = d3
+							.drag()
+							.on("start", (e, d) => {
+								if (!e.active) sim.alphaTarget(0.3).restart();
+								d.fx = d.x;
+								d.fy = d.y;
+							})
+							.on("drag", (e, d) => {
+								d.fx = e.x;
+								d.fy = e.y;
+							})
+							.on("end", (e, d) => {
+								if (!e.active) sim.alphaTarget(0);
+								d.fx = null;
+								d.fy = null;
+							});
+						g.call(drag);
+
+						sim = d3
+							.forceSimulation(nodes)
+							.force(
+								"collide",
+								d3.forceCollide().radius((d) => d.radius),
+							)
+							.force("x", d3.forceX((d) => (orderedMode ? d.targetX : w / 2)).strength(orderedMode ? 0.5 : 0.01))
+							.force("y", d3.forceY((d) => (orderedMode ? d.targetY : h / 2.8)).strength(orderedMode ? 0.5 : 0.1))
+							.on("tick", () => {
+								g.attr("transform", (d) => {
+									const s = d.id === state.selectedId ? 1.2 : 1;
+									return "translate(" + d.x + "," + d.y + ")" + (s > 1 ? " scale(" + s + ")" : "");
+								});
+							});
+
+						svg.on("click", function (e) {
+							if (e.target === this || d3.select(e.target).classed("viz-bg")) {
+								state.selectedId = null;
+								g.classed("dimmed", false);
+								g.classed("selected", false);
+								tooltip.classList.remove("visible", "selected");
+							}
+						});
+					}
+
+					document.getElementById("cycle-filter").addEventListener("change", (e) => {
+						state.cycleFilter = e.target.value;
+						state.selectedId = null;
+						runViz();
 					});
-			}
 
-			// Load world GeoJSON
-			d3.json("https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/DATA/world.geojson")
-				.then((world) => {
-					render(world);
-				})
-				.catch(() => {
-					// Fallback: fetch from raw GitHub (may have CORS in some environments)
-					return d3
-						.json("https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson")
-						.then(render);
-				})
-				.catch((err) => {
-					document.getElementById("app").innerHTML =
-						"<p style='padding:40px;text-align:center'>Could not load map data. Open this page via a local server (e.g. <code>npx serve .</code>) or check network.</p>";
-				});
+					document.getElementById("search").addEventListener("input", (e) => {
+						state.search = e.target.value;
+						state.selectedId = null;
+						runViz();
+					});
 
-			// Filter buttons
-			document.querySelectorAll("#filter button").forEach((btn) => {
-				btn.addEventListener("click", () => {
-					document.querySelectorAll("#filter button").forEach((b) => b.classList.remove("active"));
-					btn.classList.add("active");
-					currentFilter = btn.dataset.cycle;
-					g.selectAll(".country").attr("fill", (d) => fillFor(d));
+					document.getElementById("layout-toggle").addEventListener("click", (e) => {
+						state.layoutMode = state.layoutMode === "cluster" ? "ordered" : "cluster";
+						e.currentTarget.classList.toggle("on", state.layoutMode === "ordered");
+						e.currentTarget.textContent = state.layoutMode === "ordered" ? "Cluster Layout" : "Ordered Layout";
+						runViz();
+					});
+
+					document.getElementById("participant-list-toggle").addEventListener("click", () => {
+						openParticipantModal();
+					});
+
+					participantModal.querySelector(".close-modal").addEventListener("click", () => {
+						closeParticipantModal();
+					});
+
+					participantModal.addEventListener("click", (e) => {
+						if (e.target === participantModal) closeParticipantModal();
+					});
+
+					window.addEventListener("keydown", (e) => {
+						if (e.key === "Escape") closeParticipantModal();
+					});
+
+					window.addEventListener("resize", () => runViz());
+					window.addEventListener("load", () => runViz());
+				})
+				.catch(function (err) {
+					console.error("Failed to load CountryInfoforMap.csv:", err);
 				});
-			});
 		</script>
 	</body>
 </html>
