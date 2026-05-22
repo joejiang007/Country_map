@@ -518,7 +518,6 @@
 			<select id="cycle-filter">
 				<option value="all">All</option>
 				<option value="P21">PIRLS 2021</option>
-				<option value="P21 Delayed">PIRLS 2021 Delayed</option>
 				<option value="P16">PIRLS 2016</option>
 				<option value="P11">PIRLS 2011</option>
 				<option value="P06">PIRLS 2006</option>
@@ -610,7 +609,6 @@
 					function parse(r) {
 						const cycles = [];
 						if (r["Participated P21 "] === "X") cycles.push("P21");
-						if (r["Participated P21 Delayed"] === "X") cycles.push("P21 Delayed");
 						if (r["Participated P16"] === "X") cycles.push("P16");
 						if (r["Participated P11"] === "X") cycles.push("P11");
 						if (r["Participated P06"] === "X") cycles.push("P06");
@@ -679,7 +677,7 @@
 						Romania: "ro",
 						"Saudi Arabia": "sa",
 						"Saudi Arabia (RCJY)": "sa",
-						Scotland: "gb",
+						Scotland: "gb-sct",
 						"South Africa": "za",
 						Serbia: "rs",
 						Singapore: "sg",
@@ -693,7 +691,7 @@
 						"Dubai, UAE": "ae",
 						"Sharjah, UAE": "ae",
 						Uzbekistan: "uz",
-						Wales: "gb",
+						Wales: "gb-wls",
 					};
 
 					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
@@ -745,7 +743,6 @@
 							P06: "2006",
 							P11: "2011",
 							P16: "2016",
-							"P21 Delayed": "2021 (Delayed)",
 							P21: "2021",
 						};
 						participantListEl.innerHTML = list
@@ -940,7 +937,6 @@
 							P06: "2006",
 							P11: "2011",
 							P16: "2016",
-							"P21 Delayed": "2021 (Delayed)",
 							P21: "2021",
 						};
 						function showTooltip(d, isSelected) {
