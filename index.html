@@ -213,156 +213,6 @@
 				font-size: 0.68rem;
 				color: #765d58;
 			}
-			#participant-modal {
-				position: fixed;
-				inset: 0;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				padding: 24px;
-				background: rgba(37, 23, 19, 0.35);
-				backdrop-filter: blur(8px);
-				-webkit-backdrop-filter: blur(8px);
-				z-index: 200;
-				opacity: 0;
-				pointer-events: none;
-				transition: opacity 0.2s ease;
-			}
-			#participant-modal.open {
-				opacity: 1;
-				pointer-events: auto;
-			}
-			#participant-modal .modal-card {
-				width: min(1000px, 100%);
-				max-height: min(80vh, 820px);
-				overflow: hidden;
-				background: linear-gradient(180deg, #fffdfa 0%, #f8f1ec 100%);
-				border: 1px solid rgba(184, 55, 38, 0.16);
-				border-radius: 24px;
-				box-shadow: 0 24px 80px rgba(37, 23, 19, 0.18);
-				display: flex;
-				flex-direction: column;
-			}
-			#participant-modal .modal-header {
-				display: flex;
-				align-items: flex-start;
-				justify-content: space-between;
-				gap: 16px;
-				padding: 22px 24px 16px;
-				border-bottom: 1px solid rgba(184, 55, 38, 0.12);
-			}
-			#participant-modal .modal-title {
-				font-size: 1.35rem;
-				font-weight: 700;
-				color: #221917;
-			}
-			#participant-modal .modal-subtitle {
-				margin-top: 4px;
-				font-size: 0.92rem;
-				color: #735a55;
-			}
-			#participant-modal .close-modal {
-				flex: 0 0 auto;
-				width: 38px;
-				height: 38px;
-				border: none;
-				border-radius: 999px;
-				background: rgba(184, 55, 38, 0.08);
-				color: var(--dominant);
-				font-size: 1.4rem;
-				line-height: 1;
-				cursor: pointer;
-			}
-			#participant-modal .close-modal:hover {
-				background: rgba(184, 55, 38, 0.14);
-			}
-			#participant-modal .modal-body {
-				padding: 10px 24px 24px;
-				overflow: auto;
-			}
-			#participant-list {
-				display: grid;
-				grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-				gap: 14px;
-			}
-			.participant-item {
-				padding: 16px 18px;
-				border-radius: 16px;
-				background: rgba(255, 255, 255, 0.82);
-				border: 1px solid rgba(184, 55, 38, 0.12);
-			}
-			.participant-name {
-				font-size: 1rem;
-				font-weight: 700;
-				margin-bottom: 10px;
-			}
-			.participant-name a {
-				color: #241714;
-				text-decoration: none;
-				border-bottom: 1px solid rgba(184, 55, 38, 0.25);
-				transition:
-					color 0.15s ease,
-					border-color 0.15s ease;
-			}
-			.participant-name a:hover {
-				color: var(--dominant);
-				border-color: rgba(184, 55, 38, 0.6);
-			}
-			.participant-section {
-				margin-bottom: 10px;
-			}
-			.participant-section:last-child {
-				margin-bottom: 0;
-			}
-			.participant-label {
-				font-size: 0.68rem;
-				font-weight: 700;
-				text-transform: uppercase;
-				letter-spacing: 0.09em;
-				color: #6b5752;
-				margin-bottom: 4px;
-			}
-			.participant-meta {
-				display: flex;
-				align-items: center;
-				justify-content: space-between;
-				gap: 12px;
-				font-size: 0.82rem;
-				color: #453634;
-				font-weight: 600;
-			}
-			.participant-dots {
-				display: inline-flex;
-				gap: 5px;
-				flex-wrap: wrap;
-			}
-			.participant-dots span {
-				width: 10px;
-				height: 10px;
-				border-radius: 50%;
-				background: rgba(184, 55, 38, 0.22);
-			}
-			.participant-dots span.on {
-				background: var(--dominant);
-			}
-			.participant-years {
-				font-size: 0.82rem;
-				line-height: 1.4;
-				color: #6b5752;
-				margin-top: 2px;
-			}
-			.participant-languages {
-				font-size: 0.82rem;
-				line-height: 1.4;
-				color: #453634;
-				font-weight: 600;
-			}
-			.participant-empty {
-				padding: 24px;
-				text-align: center;
-				color: #735a55;
-				font-size: 0.95rem;
-			}
 			@media (max-width: 640px) {
 				#legend {
 					padding: 0 12px 10px;
@@ -534,25 +384,37 @@
 				break-after: avoid;
 			}
 			.alpha-row {
-				padding: 4px 0;
+				padding: 3px 6px;
+				border-radius: 6px;
 				break-inside: avoid;
+				transition: background 0.12s;
+			}
+			.alpha-row:hover {
+				background: rgba(184, 55, 38, 0.06);
 			}
 			.alpha-name {
-				font-size: 0.92rem;
-				font-weight: 500;
+				font-size: 0.9rem;
+				font-weight: 600;
 				color: #2a1a17;
 				text-decoration: none;
 				display: block;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
-				padding: 2px 6px;
-				border-radius: 4px;
-				transition: background 0.12s, color 0.12s;
+				transition: color 0.12s;
+				line-height: 1.4;
 			}
 			.alpha-name:hover {
-				background: rgba(184, 55, 38, 0.07);
 				color: var(--dominant);
+			}
+			.alpha-sub {
+				font-size: 0.72rem;
+				color: #9a8078;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				line-height: 1.3;
+				padding-bottom: 2px;
 			}
 			.alpha-empty {
 				padding: 32px;
@@ -576,7 +438,6 @@
 				<option value="P06">PIRLS 2006</option>
 				<option value="P01">PIRLS 2001</option>
 			</select>
-			<button id="participant-list-toggle" type="button">Participant List</button>
 			<button id="layout-toggle" type="button">Cluster View</button>
 
 
@@ -634,20 +495,6 @@
 			<div id="viz"></div>
 		</div>
 		<div id="list-view"></div>
-		<div id="participant-modal" aria-hidden="true">
-			<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="participant-modal-title">
-				<div class="modal-header">
-					<div>
-						<div class="modal-title" id="participant-modal-title">Participant Countries</div>
-						<div class="modal-subtitle" id="participant-modal-subtitle">Alphabetical list of current participants</div>
-					</div>
-					<button class="close-modal" type="button" aria-label="Close participant list">&times;</button>
-				</div>
-				<div class="modal-body">
-					<div id="participant-list"></div>
-				</div>
-			</div>
-		</div>
 		<div id="tooltip">
 			<div class="card">
 				<div class="flag-holder"></div>
@@ -750,9 +597,6 @@
 					};
 
 					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "alpha" };
-					const participantModal = document.getElementById("participant-modal");
-					const participantListEl = document.getElementById("participant-list");
-					const participantModalSubtitle = document.getElementById("participant-modal-subtitle");
 
 					function escapeHtml(value) {
 						return String(value ?? "").replace(/[&<>"']/g, (char) => {
@@ -775,65 +619,6 @@
 						return list;
 					}
 
-					function buildParticipantDots(count, maxCount) {
-						return Array.from(
-							{ length: maxCount },
-							(_, i) => '<span class="' + (i < count ? "on" : "") + '"></span>',
-						).join("");
-					}
-
-					function renderParticipantList() {
-						const list = [...filteredData()].sort((a, b) => a.name.localeCompare(b.name));
-						const maxCycles = d3.max(DATA, (d) => d.cycleCount) || 1;
-						const filterLabel = state.cycleFilter === "all" ? "All cycles" : state.cycleFilter;
-
-						if (!list.length) {
-							participantListEl.innerHTML =
-								'<div class="participant-empty">No countries match the current filter.</div>';
-							return;
-						}
-
-						const CYCLE_YEAR = {
-							P01: "2001",
-							P06: "2006",
-							P11: "2011",
-							P16: "2016",
-							P21: "2021",
-						};
-						participantListEl.innerHTML = list
-							.map((d) => {
-								const languagesText = d.languages.length ? d.languages.join(", ") : "No languages listed";
-								const yearsText = d.cycles.length ? d.cycles.map((c) => CYCLE_YEAR[c] || c).join(", ") : "None";
-								return `
-									<div class="participant-item">
-										<div class="participant-name"><a href="https:" target="_blank" rel="noreferrer">${escapeHtml(d.name)}</a></div>
-										<div class="participant-section">
-											<div class="participant-label">Prior PIRLS Participations</div>
-											<div class="participant-meta">
-												<span class="participant-dots" aria-hidden="true">${buildParticipantDots(d.cycleCount, maxCycles)}</span>
-											</div>
-											<div class="participant-years">${escapeHtml(yearsText)}</div>
-										</div>
-										<div class="participant-section">
-											<div class="participant-label">PIRLS 2026 Assessment Languages</div>
-											<div class="participant-languages">${d.langCount} language${d.langCount === 1 ? "" : "s"}: ${escapeHtml(languagesText)}</div>
-										</div>
-									</div>
-								`;
-							})
-							.join("");
-					}
-
-					function openParticipantModal() {
-						renderParticipantList();
-						participantModal.classList.add("open");
-						participantModal.setAttribute("aria-hidden", "false");
-					}
-
-					function closeParticipantModal() {
-						participantModal.classList.remove("open");
-						participantModal.setAttribute("aria-hidden", "true");
-					}
 
 					function orderedTarget(i, w, h, total) {
 						const cols = Math.max(4, Math.floor((w - 80) / 150));
@@ -936,9 +721,11 @@
 						});
 
 						listEl.innerHTML = Object.keys(groups).sort().map((letter) => {
-							const rows = groups[letter].map((d) =>
-								`<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a></div>`
-							).join("");
+							const rows = groups[letter].map((d) => {
+								const langs = d.languages.length ? d.languages.join(", ") : "—";
+								const years = d.cycles.length ? d.cycles.map((c) => LIST_CYCLE_YEAR[c] || c).join(", ") : "New";
+								return `<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a><div class="alpha-sub">${escapeHtml(years)} · ${escapeHtml(langs)}</div></div>`;
+							}).join("");
 							return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
 						}).join("");
 					}
@@ -1135,21 +922,6 @@
 						runViz();
 					});
 
-					document.getElementById("participant-list-toggle").addEventListener("click", () => {
-						openParticipantModal();
-					});
-
-					participantModal.querySelector(".close-modal").addEventListener("click", () => {
-						closeParticipantModal();
-					});
-
-					participantModal.addEventListener("click", (e) => {
-						if (e.target === participantModal) closeParticipantModal();
-					});
-
-					window.addEventListener("keydown", (e) => {
-						if (e.key === "Escape") closeParticipantModal();
-					});
 
 					window.addEventListener("resize", () => runViz());
 					window.addEventListener("load", () => runViz());
