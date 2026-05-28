@@ -507,6 +507,59 @@
 				opacity: 0.25;
 				pointer-events: none;
 			}
+			#list-view {
+				display: none;
+				height: calc(100vh - 130px);
+				overflow: hidden;
+				columns: 4;
+				column-gap: 32px;
+				padding: 8px 48px 0;
+				max-width: 1200px;
+				margin: 0 auto;
+				box-sizing: border-box;
+			}
+			.alpha-section {
+				margin-bottom: 10px;
+				break-inside: avoid-column;
+			}
+			.alpha-letter {
+				font-size: 0.68rem;
+				font-weight: 700;
+				letter-spacing: 0.14em;
+				text-transform: uppercase;
+				color: #b8a09a;
+				padding: 10px 0 5px;
+				margin-bottom: 2px;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.1);
+				break-after: avoid;
+			}
+			.alpha-row {
+				padding: 4px 0;
+				break-inside: avoid;
+			}
+			.alpha-name {
+				font-size: 0.92rem;
+				font-weight: 500;
+				color: #2a1a17;
+				text-decoration: none;
+				display: block;
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				padding: 2px 6px;
+				border-radius: 4px;
+				transition: background 0.12s, color 0.12s;
+			}
+			.alpha-name:hover {
+				background: rgba(184, 55, 38, 0.07);
+				color: var(--dominant);
+			}
+			.alpha-empty {
+				padding: 32px;
+				text-align: center;
+				color: #735a55;
+				font-size: 0.95rem;
+			}
 		</style>
 	</head>
 	<body>
@@ -524,7 +577,8 @@
 				<option value="P01">PIRLS 2001</option>
 			</select>
 			<button id="participant-list-toggle" type="button">Participant List</button>
-			<button id="layout-toggle" type="button">Order by PIRLS Participation</button>
+			<button id="layout-toggle" type="button">Cluster View</button>
+
 
 			<label for="search">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
@@ -579,6 +633,7 @@
 		<div id="viz-wrap">
 			<div id="viz"></div>
 		</div>
+		<div id="list-view"></div>
 		<div id="participant-modal" aria-hidden="true">
 			<div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="participant-modal-title">
 				<div class="modal-header">
@@ -694,7 +749,7 @@
 						Wales: "gb-wls",
 					};
 
-					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
+					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "alpha" };
 					const participantModal = document.getElementById("participant-modal");
 					const participantListEl = document.getElementById("participant-list");
 					const participantModalSubtitle = document.getElementById("participant-modal-subtitle");
@@ -859,22 +914,60 @@
 
 					let sim = null;
 
+					const LIST_CYCLE_YEAR = { P01: "2001", P06: "2006", P11: "2011", P16: "2016", P21: "2021" };
+					const LIST_FILLS   = ["#fdf2f1","#f9e4e1","#f2d0cb","#eab8b0","#d99689","#c76552","#b83726"];
+					const LIST_BORDERS = ["rgba(184,55,38,0.2)","rgba(184,55,38,0.35)","rgba(184,55,38,0.5)","#c89088","#b07060","#9a5040","#b83726"];
+
+					function renderListView() {
+						const listEl = document.getElementById("list-view");
+						const list = filteredData().sort((a, b) => a.name.localeCompare(b.name));
+						const maxCycles = d3.max(DATA, (d) => d.cycleCount) || 1;
+
+						if (!list.length) {
+							listEl.innerHTML = '<div class="alpha-empty">No countries match the current filter.</div>';
+							return;
+						}
+
+						const groups = {};
+						list.forEach((d) => {
+							const letter = d.name[0].toUpperCase();
+							if (!groups[letter]) groups[letter] = [];
+							groups[letter].push(d);
+						});
+
+						listEl.innerHTML = Object.keys(groups).sort().map((letter) => {
+							const rows = groups[letter].map((d) =>
+								`<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a></div>`
+							).join("");
+							return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
+						}).join("");
+					}
+
 					function runViz() {
+						const vizWrap = document.getElementById("viz-wrap");
+						const listEl = document.getElementById("list-view");
+						if (state.layoutMode === "alpha") {
+							if (sim) { sim.stop(); sim = null; }
+							document.getElementById("tooltip").classList.remove("visible", "selected");
+							document.getElementById("legend").style.display = "none";
+							vizWrap.style.display = "none";
+							listEl.style.display = "block";
+							renderListView();
+							return;
+						}
+						document.getElementById("legend").style.display = "";
+						vizWrap.style.display = "";
+						listEl.style.display = "none";
+
 						const el = document.getElementById("viz");
 						const w = Math.max(el.clientWidth || 800, 400);
 						const h = Math.max(el.clientHeight || 500, 300);
-						const orderedMode = state.layoutMode === "ordered";
 						const list = filteredData();
-						const orderedList =
-							orderedMode ?
-								[...list].sort((a, b) => b.cycleCount - a.cycleCount || a.name.localeCompare(b.name))
-							:	list;
 
-						const nodes = orderedList.map((d, i) => {
+						const nodes = list.map((d) => {
 							const shape = shapeFor(d);
 							const r = nodeRadius(d);
 							const cs = cardSize(d);
-							const target = orderedMode ? orderedTarget(i, w, h, orderedList.length) : { x: w / 2, y: h / 2.8 };
 							return {
 								...d,
 								shape,
@@ -882,8 +975,6 @@
 								cardW: cs.w,
 								cardH: cs.h,
 								radiusCircle: r,
-								targetX: target.x,
-								targetY: target.y,
 								x: w / 2 + (Math.random() - 0.5) * w * 0.5,
 								y: h / 2 + (Math.random() - 0.5) * h * 0.5,
 							};
@@ -1006,8 +1097,8 @@
 									.radius((d) => d.radius)
 									.iterations(2),
 							)
-							.force("x", d3.forceX((d) => (orderedMode ? d.targetX : w / 2)).strength(orderedMode ? 0.5 : 0.02))
-							.force("y", d3.forceY((d) => (orderedMode ? d.targetY : h / 2.8)).strength(orderedMode ? 0.5 : 0.3))
+							.force("x", d3.forceX(w / 2).strength(0.02))
+							.force("y", d3.forceY(h / 2.8).strength(0.1))
 							.on("tick", () => {
 								g.attr("transform", (d) => {
 									const s = d.id === state.selectedId ? 1.2 : 1;
@@ -1038,10 +1129,9 @@
 					});
 
 					document.getElementById("layout-toggle").addEventListener("click", (e) => {
-						state.layoutMode = state.layoutMode === "cluster" ? "ordered" : "cluster";
-						e.currentTarget.classList.toggle("on", state.layoutMode === "ordered");
-						e.currentTarget.textContent =
-							state.layoutMode === "ordered" ? "Cluster Layout" : "Order by PIRLS Participation";
+						state.layoutMode = state.layoutMode === "alpha" ? "cluster" : "alpha";
+						e.currentTarget.classList.toggle("on", state.layoutMode === "cluster");
+						e.currentTarget.textContent = state.layoutMode === "cluster" ? "Alphabetical List" : "Cluster View";
 						runViz();
 					});
 
