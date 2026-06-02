@@ -587,13 +587,13 @@
 						Austria: [47.52, 14.55],
 						Azerbaijan: [40.14, 47.58],
 						Bahrain: [26.03, 50.55],
-						"Belgium (Flemish)": [50.5, 4.47],
-						"Belgium (French)": [50.5, 4.47],
+						"Belgium (Flemish)": [51, 4.3],
+						"Belgium (French)": [50.3, 4.45],
 						Brazil: [-14.24, -51.93],
 						Bulgaria: [42.73, 25.49],
 						Canada: [56.13, -106.35],
-						"Ontario, Canada": [51.25, -85.32],
-						"Quebec, Canada": [53.03, -72.15],
+						"Ontario, Canada": [50, -85],
+						"Quebec, Canada": [52, -72],
 						"Chinese Taipei": [23.7, 120.96],
 						Cyprus: [35.13, 33.43],
 						"Czech Republic": [49.82, 15.47],
@@ -874,7 +874,10 @@
 							renderListView();
 							return;
 						}
-						if (sim) { sim.stop(); sim = null; }
+						if (sim) {
+							sim.stop();
+							sim = null;
+						}
 						document.getElementById("legend").style.display = "";
 						vizWrap.style.display = "";
 						listEl.style.display = "none";
