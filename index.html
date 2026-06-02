@@ -33,22 +33,25 @@
 				flex-direction: column;
 				align-items: center;
 				text-align: center;
-				padding: 12px 24px 0;
-				font-size: 1.2rem;
+				padding: 6px 24px 0;
+				font-size: 1rem;
 				font-family: "Lato", sans-serif;
 				font-weight: 500;
 				letter-spacing: 0.02em;
 				color: #333;
 			}
 			.header .brand {
-				font-family: "Lora", serif;
 				color: var(--dominant);
 				font-weight: 600;
-				font-size: 2rem;
+				font-size: 1.5rem;
+				padding-top: 20px;
 			}
 			#viz {
 				width: 100%;
 				height: calc(100vh - 130px);
+				margin-top: 10px;
+				user-select: none;
+				-webkit-user-select: none;
 			}
 			#viz .node {
 				cursor: grab;
@@ -66,8 +69,8 @@
 				display: flex;
 				align-items: center;
 				justify-content: center;
-				gap: 10px;
-				padding: 10px 24px 12px;
+				gap: 8px;
+				padding: 6px 24px 6px;
 				flex-wrap: nowrap;
 				max-width: 1100px;
 				margin: 0 auto;
@@ -75,27 +78,23 @@
 				white-space: nowrap;
 			}
 			#filter-bar label {
-				font-size: 0.85rem;
+				font-size: 0.8rem;
 				color: #555;
 				white-space: nowrap;
 			}
 			#filter-bar select,
-			#filter-bar input#search,
-			#filter-bar button {
-				padding: 6px 14px;
-				border-radius: 8px;
-				font-size: 0.85rem;
+			#filter-bar input#search {
+				padding: 4px 10px;
+				border-radius: 7px;
+				font-size: 0.8rem;
 				border: 1px solid #e0e0e0;
 				font-family: inherit;
-				height: 36px;
-			}
-			#filter-bar select,
-			#filter-bar input#search {
+				height: 30px;
 				background: #fff;
 				color: #333;
 			}
 			#filter-bar select {
-				min-width: 150px;
+				min-width: 140px;
 				cursor: pointer;
 			}
 			#filter-bar select:focus,
@@ -104,48 +103,84 @@
 				border-color: var(--dominant);
 			}
 			#filter-bar input#search {
-				padding: 6px 12px;
-				width: 180px;
+				width: 160px;
 			}
-			#filter-bar button {
+			.filter-sep {
+				width: 1px;
+				height: 18px;
+				background: #ddd;
+				margin: 0 4px;
+				flex-shrink: 0;
+			}
+			.toggle-label {
+				font-size: 0.8rem;
+				color: #bbb;
 				cursor: pointer;
-				background: #f0f0f0;
-				color: #555;
-				transition: all 0.15s;
-				flex: 0 0 auto;
+				user-select: none;
+				transition:
+					color 0.15s,
+					font-weight 0.15s;
 			}
-			#filter-bar button:hover {
-				background: #e8e8e8;
-				color: #222;
-			}
-			#filter-bar button.on {
-				background: rgba(184, 55, 38, 0.12);
+			.toggle-label.active {
 				color: var(--dominant);
-				border-color: rgba(184, 55, 38, 0.35);
+				font-weight: 600;
+			}
+			.toggle-switch {
+				position: relative;
+				display: inline-block;
+				width: 38px;
+				height: 20px;
+				cursor: pointer;
+			}
+			.toggle-switch input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+				position: absolute;
+			}
+			.toggle-rail {
+				position: absolute;
+				inset: 0;
+				background: rgba(184, 55, 38, 0.1);
+				border-radius: 10px;
+				border: 1px solid rgba(184, 55, 38, 0.22);
+			}
+			.toggle-knob {
+				position: absolute;
+				top: 2px;
+				left: 2px;
+				width: 14px;
+				height: 14px;
+				background: var(--dominant);
+				border-radius: 50%;
+				transition: transform 0.22s ease;
+			}
+			.toggle-switch input:checked + .toggle-rail .toggle-knob {
+				transform: translateX(18px);
 			}
 			#legend {
 				max-width: 1100px;
 				margin: 0 auto;
-				padding: 4px 24px 14px;
+				padding: 2px 24px 6px;
 				display: flex;
 				justify-content: center;
 			}
 			#legend .legend-card {
 				width: min(860px, 100%);
-				padding: 16px 20px;
-				border-radius: 18px;
+				padding: 8px 16px;
+				border-radius: 12px;
 				background: rgba(255, 250, 247, 0.92);
 				border: 1px solid rgba(184, 55, 38, 0.18);
-				box-shadow: 0 16px 36px rgba(37, 23, 19, 0.12);
+				box-shadow: 0 8px 24px rgba(37, 23, 19, 0.09);
 				backdrop-filter: blur(10px);
 				-webkit-backdrop-filter: blur(10px);
-				font-size: 0.82rem;
+				font-size: 0.78rem;
 				color: #5d4540;
 				font-family: "Lato", sans-serif;
 				letter-spacing: 0.01em;
 				display: grid;
-				grid-template-columns: 90px minmax(300px, 360px) minmax(0, 1fr);
-				gap: 22px;
+				grid-template-columns: 70px minmax(260px, 340px) minmax(0, 1fr);
+				gap: 14px;
 				align-items: center;
 			}
 			.legend-title {
@@ -178,14 +213,14 @@
 				background: #f2d0cb;
 			}
 			.legend-shape.circle {
-				width: 32px;
-				height: 32px;
+				width: 22px;
+				height: 22px;
 				border-radius: 50%;
 			}
 			.legend-shape.card {
-				width: 46px;
-				height: 30px;
-				border-radius: 8px;
+				width: 32px;
+				height: 20px;
+				border-radius: 5px;
 			}
 			.legend-copy {
 				line-height: 1.35;
@@ -204,10 +239,10 @@
 				text-align: center;
 			}
 			.legend-swatch {
-				height: 16px;
+				height: 12px;
 				border-radius: 999px;
 				border: 1px solid rgba(184, 55, 38, 0.12);
-				margin-bottom: 4px;
+				margin-bottom: 3px;
 			}
 			.legend-swatch-label {
 				font-size: 0.68rem;
@@ -278,22 +313,34 @@
 				justify-content: center;
 				text-align: center;
 			}
-			#tooltip .card .flag-holder {
+			#tooltip .card .coord-holder {
 				margin-bottom: 12px;
-				min-height: 0;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 5px;
 			}
-			#tooltip .card .flag-holder:empty {
+			#tooltip .card .coord-holder:empty {
 				display: none;
 			}
-			#tooltip .card .flag-holder img {
+			#tooltip .card .coord-globe {
 				width: 64px;
-				height: auto;
-				border-radius: 4px;
-				box-shadow: 3px 10px 10px rgba(0, 0, 0, 0.4);
+				height: 64px;
+				filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.18));
+				transition:
+					width 0.4s ease,
+					height 0.4s ease;
 			}
-			#tooltip.visible.selected .card .flag-holder img {
-				width: 88px;
-				height: auto;
+			#tooltip.visible.selected .card .coord-globe {
+				width: 90px;
+				height: 90px;
+			}
+			#tooltip .card .coord-text {
+				font-size: 0.7rem;
+				color: #9a6b62;
+				letter-spacing: 0.09em;
+				font-family: "Raleway", sans-serif;
+				font-weight: 600;
 			}
 			#tooltip .card .name {
 				font-size: 1.4rem;
@@ -360,10 +407,11 @@
 			#list-view {
 				display: none;
 				height: calc(100vh - 130px);
-				overflow: hidden;
+				overflow-x: auto;
+				overflow-y: hidden;
 				columns: 4;
-				column-gap: 32px;
-				padding: 8px 48px 0;
+				column-gap: 24px;
+				padding: 8px 24px 0;
 				max-width: 1200px;
 				margin: 0 auto;
 				box-sizing: border-box;
@@ -373,19 +421,19 @@
 				break-inside: avoid-column;
 			}
 			.alpha-letter {
-				font-size: 0.68rem;
+				font-size: 0.65rem;
 				font-weight: 700;
-				letter-spacing: 0.14em;
+				letter-spacing: 0.15em;
 				text-transform: uppercase;
 				color: #b8a09a;
-				padding: 10px 0 5px;
+				padding: 8px 0 4px;
 				margin-bottom: 2px;
 				border-bottom: 1px solid rgba(184, 55, 38, 0.1);
 				break-after: avoid;
 			}
 			.alpha-row {
 				padding: 3px 6px;
-				border-radius: 6px;
+				border-radius: 5px;
 				break-inside: avoid;
 				transition: background 0.12s;
 			}
@@ -393,7 +441,7 @@
 				background: rgba(184, 55, 38, 0.06);
 			}
 			.alpha-name {
-				font-size: 0.9rem;
+				font-size: 0.88rem;
 				font-weight: 600;
 				color: #2a1a17;
 				text-decoration: none;
@@ -408,7 +456,7 @@
 				color: var(--dominant);
 			}
 			.alpha-sub {
-				font-size: 0.72rem;
+				font-size: 0.68rem;
 				color: #9a8078;
 				white-space: nowrap;
 				overflow: hidden;
@@ -438,11 +486,15 @@
 				<option value="P06">PIRLS 2006</option>
 				<option value="P01">PIRLS 2001</option>
 			</select>
-			<button id="layout-toggle" type="button">Cluster View</button>
-
-
 			<label for="search">Search</label>
 			<input type="text" id="search" placeholder="Country name..." />
+			<span class="filter-sep"></span>
+			<span class="toggle-label active" id="label-cluster">Cluster</span>
+			<label class="toggle-switch">
+				<input type="checkbox" id="layout-toggle" />
+				<span class="toggle-rail"><span class="toggle-knob"></span></span>
+			</label>
+			<span class="toggle-label" id="label-list">List</span>
 		</div>
 		<div id="legend" aria-label="Chart legend">
 			<div class="legend-card">
@@ -497,7 +549,7 @@
 		<div id="list-view"></div>
 		<div id="tooltip">
 			<div class="card">
-				<div class="flag-holder"></div>
+				<div class="coord-holder"></div>
 				<div class="name"></div>
 				<div class="cycles"></div>
 				<div class="languages"></div>
@@ -529,74 +581,139 @@
 
 					const DATA = RAW.map((r) => ({ ...parse(r), _raw: r }));
 
-					const COUNTRY_TO_ISO = {
-						Albania: "al",
-						Austria: "at",
-						Australia: "au",
-						Azerbaijan: "az",
-						Bahrain: "bh",
-						"Belgium (Flemish)": "be",
-						"Belgium (French)": "be",
-						Brazil: "br",
-						Bulgaria: "bg",
-						Canada: "ca",
-						"Ontario, Canada": "ca",
-						"Quebec, Canada": "ca",
-						"Chinese Taipei": "tw",
-						Cyprus: "cy",
-						"Czech Republic": "cz",
-						Denmark: "dk",
-						England: "gb",
-						Finland: "fi",
-						France: "fr",
-						Georgia: "ge",
-						Germany: "de",
-						"Hong Kong SAR": "hk",
-						Hungary: "hu",
-						"Iran, Islamic Rep. of": "ir",
-						Ireland: "ie",
-						Israel: "il",
-						Italy: "it",
-						Jordan: "jo",
-						Kazakhstan: "kz",
-						"Korea, Rep. of": "kr",
-						Kuwait: "kw",
-						Latvia: "lv",
-						Lithuania: "lt",
-						"Macao SAR": "mo",
-						Malta: "mt",
-						Montenegro: "me",
-						Morocco: "ma",
-						Netherlands: "nl",
-						"New Zealand": "nz",
-						"North Macedonia": "mk",
-						"Northern Ireland": "gb",
-						Norway: "no",
-						Oman: "om",
-						Poland: "pl",
-						Portugal: "pt",
-						Qatar: "qa",
-						Romania: "ro",
-						"Saudi Arabia": "sa",
-						"Saudi Arabia (RCJY)": "sa",
-						Scotland: "gb-sct",
-						"South Africa": "za",
-						Serbia: "rs",
-						Singapore: "sg",
-						"Slovak Republic": "sk",
-						Slovenia: "si",
-						Spain: "es",
-						Sweden: "se",
-						Tajikistan: "tj",
-						"United Arab Emirates": "ae",
-						"Abu Dhabi, UAE": "ae",
-						"Dubai, UAE": "ae",
-						"Sharjah, UAE": "ae",
-						Uzbekistan: "uz",
-						Wales: "gb-wls",
+					const COUNTRY_TO_COORDS = {
+						Albania: [41.15, 20.17],
+						Australia: [-25.27, 133.78],
+						Austria: [47.52, 14.55],
+						Azerbaijan: [40.14, 47.58],
+						Bahrain: [26.03, 50.55],
+						"Belgium (Flemish)": [50.5, 4.47],
+						"Belgium (French)": [50.5, 4.47],
+						Brazil: [-14.24, -51.93],
+						Bulgaria: [42.73, 25.49],
+						Canada: [56.13, -106.35],
+						"Ontario, Canada": [51.25, -85.32],
+						"Quebec, Canada": [53.03, -72.15],
+						"Chinese Taipei": [23.7, 120.96],
+						Cyprus: [35.13, 33.43],
+						"Czech Republic": [49.82, 15.47],
+						Denmark: [56.26, 9.5],
+						England: [52.36, -1.17],
+						Finland: [61.92, 25.75],
+						France: [46.23, 2.21],
+						Georgia: [42.32, 43.36],
+						Germany: [51.17, 10.45],
+						"Hong Kong SAR": [22.4, 114.11],
+						Hungary: [47.16, 19.5],
+						"Iran, Islamic Rep. of": [32.43, 53.69],
+						Ireland: [53.41, -8.24],
+						Israel: [31.05, 34.85],
+						Italy: [41.87, 12.57],
+						Jordan: [30.59, 36.24],
+						Kazakhstan: [48.02, 66.92],
+						"Korea, Rep. of": [35.91, 127.77],
+						Kuwait: [29.31, 47.48],
+						Latvia: [56.88, 24.6],
+						Lithuania: [55.17, 23.88],
+						"Macao SAR": [22.2, 113.54],
+						Malta: [35.94, 14.38],
+						Montenegro: [42.71, 19.37],
+						Morocco: [31.79, -7.09],
+						Netherlands: [52.13, 5.29],
+						"New Zealand": [-40.9, 174.89],
+						"North Macedonia": [41.61, 21.75],
+						"Northern Ireland": [54.61, -6.69],
+						Norway: [60.47, 8.47],
+						Oman: [21.51, 55.92],
+						Poland: [51.92, 19.15],
+						Portugal: [39.4, -8.22],
+						Qatar: [25.35, 51.18],
+						Romania: [45.94, 24.97],
+						"Saudi Arabia": [23.89, 45.08],
+						"Saudi Arabia (RCJY)": [23.89, 45.08],
+						Scotland: [56.49, -4.2],
+						"South Africa": [-30.56, 22.94],
+						Serbia: [44.02, 21.01],
+						Singapore: [1.35, 103.82],
+						"Slovak Republic": [48.67, 19.7],
+						Slovenia: [46.15, 14.99],
+						Spain: [40.46, -3.75],
+						Sweden: [60.13, 18.64],
+						Tajikistan: [38.86, 71.28],
+						"United Arab Emirates": [23.42, 53.85],
+						"Abu Dhabi, UAE": [24.47, 54.37],
+						"Dubai, UAE": [25.2, 55.27],
+						"Sharjah, UAE": [25.36, 55.39],
+						Uzbekistan: [41.38, 64.59],
+						Wales: [52.13, -3.78],
 					};
 
-					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "alpha" };
+					function makeGlobeSVG(lat, lon) {
+						const r = 0.88;
+						const DEG = Math.PI / 180;
+						const φ0 = lat * DEG,
+							λ0 = lon * DEG;
+
+						function project(φ, λ) {
+							const dλ = λ - λ0;
+							const x = Math.cos(φ) * Math.sin(dλ);
+							const y = Math.sin(φ) * Math.cos(φ0) - Math.cos(φ) * Math.sin(φ0) * Math.cos(dλ);
+							const z = Math.sin(φ) * Math.sin(φ0) + Math.cos(φ) * Math.cos(φ0) * Math.cos(dλ);
+							return [x * r, -y * r, z];
+						}
+
+						function makePath(pts) {
+							let d = "",
+								on = false;
+							for (const [φ, λ] of pts) {
+								const [px, py, z] = project(φ, λ);
+								if (z >= 0) {
+									d += (on ? "L" : "M") + px.toFixed(3) + "," + py.toFixed(3);
+									on = true;
+								} else on = false;
+							}
+							return d;
+						}
+
+						function gridPath(d, strong) {
+							const a = strong ? 0.3 : 0.16,
+								w = strong ? 0.038 : 0.018;
+							return d ? `<path d="${d}" stroke="rgba(184,55,38,${a})" stroke-width="${w}" fill="none"/>` : "";
+						}
+
+						const latLines = [-60, -30, 0, 30, 60]
+							.map((deg) => {
+								const φ = deg * DEG;
+								const pts = Array.from({ length: 121 }, (_, i) => [φ, (-180 + i * 3) * DEG]);
+								return gridPath(makePath(pts), deg === 0);
+							})
+							.join("");
+
+						const lonLines = [-3, -2, -1, 0, 1, 2]
+							.map((k) => {
+								const λ = λ0 + k * 60 * DEG;
+								const pts = Array.from({ length: 61 }, (_, i) => [(-90 + i * 3) * DEG, λ]);
+								return gridPath(makePath(pts), k === 0);
+							})
+							.join("");
+
+						return `<svg class="coord-globe" viewBox="-1 -1 2 2" xmlns="http://www.w3.org/2000/svg">
+							<defs><clipPath id="gc"><circle cx="0" cy="0" r="${r}"/></clipPath></defs>
+							<circle cx="0" cy="0" r="${r}" fill="rgba(253,242,241,0.75)"/>
+							<g clip-path="url(#gc)">${latLines}${lonLines}</g>
+							<circle cx="0" cy="0" r="${r}" fill="none" stroke="rgba(184,55,38,0.45)" stroke-width="0.055"/>
+							<circle cx="0" cy="0" r="0.13" fill="rgba(184,55,38,0.22)"/>
+							<circle cx="0" cy="0" r="0.09" fill="#b83726"/>
+						</svg>`;
+					}
+
+					function formatCoords(lat, lon) {
+						const latDir = lat >= 0 ? "N" : "S";
+						const lonDir = lon >= 0 ? "E" : "W";
+						return Math.abs(lat).toFixed(1) + "° " + latDir + " · " + Math.abs(lon).toFixed(1) + "° " + lonDir;
+					}
+
+					let state = { cycleFilter: "all", selectedId: null, search: "", layoutMode: "cluster" };
 
 					function escapeHtml(value) {
 						return String(value ?? "").replace(/[&<>"']/g, (char) => {
@@ -618,7 +735,6 @@
 						}
 						return list;
 					}
-
 
 					function orderedTarget(i, w, h, total) {
 						const cols = Math.max(4, Math.floor((w - 80) / 150));
@@ -700,8 +816,16 @@
 					let sim = null;
 
 					const LIST_CYCLE_YEAR = { P01: "2001", P06: "2006", P11: "2011", P16: "2016", P21: "2021" };
-					const LIST_FILLS   = ["#fdf2f1","#f9e4e1","#f2d0cb","#eab8b0","#d99689","#c76552","#b83726"];
-					const LIST_BORDERS = ["rgba(184,55,38,0.2)","rgba(184,55,38,0.35)","rgba(184,55,38,0.5)","#c89088","#b07060","#9a5040","#b83726"];
+					const LIST_FILLS = ["#fdf2f1", "#f9e4e1", "#f2d0cb", "#eab8b0", "#d99689", "#c76552", "#b83726"];
+					const LIST_BORDERS = [
+						"rgba(184,55,38,0.2)",
+						"rgba(184,55,38,0.35)",
+						"rgba(184,55,38,0.5)",
+						"#c89088",
+						"#b07060",
+						"#9a5040",
+						"#b83726",
+					];
 
 					function renderListView() {
 						const listEl = document.getElementById("list-view");
@@ -720,21 +844,29 @@
 							groups[letter].push(d);
 						});
 
-						listEl.innerHTML = Object.keys(groups).sort().map((letter) => {
-							const rows = groups[letter].map((d) => {
-								const langs = d.languages.length ? d.languages.join(", ") : "—";
-								const years = d.cycles.length ? d.cycles.map((c) => LIST_CYCLE_YEAR[c] || c).join(", ") : "New";
-								return `<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a><div class="alpha-sub">${escapeHtml(years)} · ${escapeHtml(langs)}</div></div>`;
-							}).join("");
-							return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
-						}).join("");
+						listEl.innerHTML = Object.keys(groups)
+							.sort()
+							.map((letter) => {
+								const rows = groups[letter]
+									.map((d) => {
+										const langs = d.languages.length ? d.languages.join(", ") : "—";
+										const years = d.cycles.length ? d.cycles.map((c) => LIST_CYCLE_YEAR[c] || c).join(", ") : "New";
+										return `<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a><div class="alpha-sub">${escapeHtml(years)} · ${escapeHtml(langs)}</div></div>`;
+									})
+									.join("");
+								return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
+							})
+							.join("");
 					}
 
 					function runViz() {
 						const vizWrap = document.getElementById("viz-wrap");
 						const listEl = document.getElementById("list-view");
 						if (state.layoutMode === "alpha") {
-							if (sim) { sim.stop(); sim = null; }
+							if (sim) {
+								sim.stop();
+								sim = null;
+							}
 							document.getElementById("tooltip").classList.remove("visible", "selected");
 							document.getElementById("legend").style.display = "none";
 							vizWrap.style.display = "none";
@@ -742,6 +874,7 @@
 							renderListView();
 							return;
 						}
+						if (sim) { sim.stop(); sim = null; }
 						document.getElementById("legend").style.display = "";
 						vizWrap.style.display = "";
 						listEl.style.display = "none";
@@ -824,9 +957,15 @@
 							ttLanguages.textContent =
 								"PIRLS 2026 Assessment Languages: " +
 								(d.languages && d.languages.length ? d.languages.join(", ") : "—");
-							const flagEl = tooltip.querySelector(".flag-holder");
-							const code = COUNTRY_TO_ISO[d.name];
-							flagEl.innerHTML = code ? '<img src="https://flagcdn.com/w160/' + code + '.png" alt="" />' : "";
+							const coordEl = tooltip.querySelector(".coord-holder");
+							const coords = COUNTRY_TO_COORDS[d.name];
+							if (coords) {
+								const [lat, lon] = coords;
+								coordEl.innerHTML =
+									makeGlobeSVG(lat, lon) + '<div class="coord-text">' + formatCoords(lat, lon) + "</div>";
+							} else {
+								coordEl.innerHTML = "";
+							}
 							tooltip.classList.add("visible");
 							tooltip.classList.toggle("selected", !!isSelected);
 						}
@@ -858,6 +997,7 @@
 						const drag = d3
 							.drag()
 							.on("start", (e, d) => {
+								e.sourceEvent.preventDefault();
 								if (!e.active) sim.alphaTarget(0.3).restart();
 								d.fx = d.x;
 								d.fy = d.y;
@@ -885,9 +1025,11 @@
 									.iterations(2),
 							)
 							.force("x", d3.forceX(w / 2).strength(0.02))
-							.force("y", d3.forceY(h / 2.8).strength(0.1))
+							.force("y", d3.forceY(h / 2.2).strength(0.1))
 							.on("tick", () => {
 								g.attr("transform", (d) => {
+									d.x = Math.max(d.radius, Math.min(w - d.radius, d.x));
+									d.y = Math.max(d.radius, Math.min(h - d.radius, d.y));
 									const s = d.id === state.selectedId ? 1.2 : 1;
 									return "translate(" + d.x + "," + d.y + ")" + (s > 1 ? " scale(" + s + ")" : "");
 								});
@@ -915,13 +1057,31 @@
 						runViz();
 					});
 
-					document.getElementById("layout-toggle").addEventListener("click", (e) => {
-						state.layoutMode = state.layoutMode === "alpha" ? "cluster" : "alpha";
-						e.currentTarget.classList.toggle("on", state.layoutMode === "cluster");
-						e.currentTarget.textContent = state.layoutMode === "cluster" ? "Alphabetical List" : "Cluster View";
+					const layoutToggle = document.getElementById("layout-toggle");
+					const labelCluster = document.getElementById("label-cluster");
+					const labelList = document.getElementById("label-list");
+					function syncToggleLabels() {
+						const isList = state.layoutMode === "alpha";
+						labelCluster.classList.toggle("active", !isList);
+						labelList.classList.toggle("active", isList);
+					}
+					layoutToggle.addEventListener("change", () => {
+						state.layoutMode = layoutToggle.checked ? "alpha" : "cluster";
+						syncToggleLabels();
 						runViz();
 					});
-
+					labelCluster.addEventListener("click", () => {
+						if (layoutToggle.checked) {
+							layoutToggle.checked = false;
+							layoutToggle.dispatchEvent(new Event("change"));
+						}
+					});
+					labelList.addEventListener("click", () => {
+						if (!layoutToggle.checked) {
+							layoutToggle.checked = true;
+							layoutToggle.dispatchEvent(new Event("change"));
+						}
+					});
 
 					window.addEventListener("resize", () => runViz());
 					window.addEventListener("load", () => runViz());
