@@ -1002,10 +1002,10 @@
 								}
 							})
 							.on("click", (e, d) => {
-								e.stopPropagation();
 								state.selectedId = state.selectedId === d.id ? null : d.id;
 								g.classed("dimmed", (n) => state.selectedId !== null && n.id !== state.selectedId);
 								g.classed("selected", (n) => n.id === state.selectedId);
+								applyScales();
 								if (state.selectedId) {
 									const sel = DATA.find((r) => r.id === state.selectedId);
 									showTooltip(sel, true);
@@ -1056,11 +1056,19 @@
 								});
 							});
 
+						function applyScales() {
+							g.attr("transform", (d) => {
+								const s = d.id === state.selectedId ? 1.2 : 1;
+								return "translate(" + d.x + "," + d.y + ")" + (s > 1 ? " scale(" + s + ")" : "");
+							});
+						}
+
 						svg.on("click", function (e) {
-							if (e.target === this || d3.select(e.target).classed("viz-bg")) {
+							if (!e.target.closest("g.node")) {
 								state.selectedId = null;
 								g.classed("dimmed", false);
 								g.classed("selected", false);
+								applyScales();
 								tooltip.classList.remove("visible", "selected");
 							}
 						});
