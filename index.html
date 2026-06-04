@@ -408,7 +408,7 @@
 				height: calc(100vh - 130px);
 				overflow-x: auto;
 				overflow-y: hidden;
-				columns: 4;
+				columns: 6;
 				column-gap: 24px;
 				padding: 8px 24px 0;
 				max-width: 1200px;
@@ -420,7 +420,7 @@
 				break-inside: avoid-column;
 			}
 			.alpha-letter {
-				font-size: 0.65rem;
+				font-size: 1.2rem;
 				font-weight: 700;
 				letter-spacing: 0.15em;
 				text-transform: uppercase;
@@ -850,7 +850,7 @@
 									.map((d) => {
 										const langs = d.languages.length ? d.languages.join(", ") : "—";
 										const years = d.cycles.length ? d.cycles.map((c) => LIST_CYCLE_YEAR[c] || c).join(", ") : "New";
-										return `<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a><div class="alpha-sub">${escapeHtml(years)} · ${escapeHtml(langs)}</div></div>`;
+										return `<div class="alpha-row"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a><div class="alpha-sub">${escapeHtml(years)} </div></div>`;
 									})
 									.join("");
 								return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
