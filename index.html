@@ -1086,7 +1086,7 @@
 					});
 
 					window.addEventListener("resize", () => runViz());
-					window.addEventListener("load", () => runViz());
+					runViz();
 				})
 				.catch(function (err) {
 					console.error("Failed to load CountryInfoforMap.csv:", err);
