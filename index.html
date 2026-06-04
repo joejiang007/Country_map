@@ -76,6 +76,8 @@
 				margin: 0 auto;
 				overflow-x: auto;
 				white-space: nowrap;
+				user-select: none;
+				-webkit-user-select: none;
 			}
 			#filter-bar label {
 				font-size: 0.8rem;
@@ -464,10 +466,12 @@
 				padding-bottom: 2px;
 			}
 			.alpha-empty {
-				padding: 32px;
+				column-span: all;
 				text-align: center;
+				padding: 48px 0;
 				color: #735a55;
 				font-size: 0.95rem;
+				width: 100%;
 			}
 		</style>
 	</head>
@@ -885,6 +889,21 @@
 						const w = Math.max(el.clientWidth || 800, 400);
 						const h = Math.max(el.clientHeight || 500, 300);
 						const list = filteredData();
+
+						if (!list.length) {
+							d3.select("#viz").selectAll("*").remove();
+							const svg = d3.select("#viz").append("svg").attr("width", w).attr("height", h);
+							svg.append("text")
+								.attr("x", w / 2)
+								.attr("y", h / 2)
+								.attr("text-anchor", "middle")
+								.attr("dominant-baseline", "central")
+								.style("font-size", "0.95rem")
+								.style("fill", "#735a55")
+								.style("font-family", '"Source Serif 4", Georgia, serif')
+								.text("No countries match the current filter.");
+							return;
+						}
 
 						const nodes = list.map((d) => {
 							const shape = shapeFor(d);
