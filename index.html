@@ -86,7 +86,9 @@
 				border-bottom-color: var(--dominant);
 				color: #2a1a17;
 			}
-			#filter-bar input#search { cursor: text; }
+			#filter-bar input#search {
+				cursor: text;
+			}
 			#filter-bar input#search::placeholder {
 				color: #b8a09a;
 				font-weight: 400;
@@ -124,16 +126,17 @@
 				background: rgba(184, 55, 38, 0.06);
 			}
 			.alpha-name {
-				font-size: 0.82rem;
-				font-weight: 600;
-				color: #2a1a17;
+				font-size: 1rem;
+				font-weight: 400;
+				color: #141414;
 				text-decoration: none;
 				display: block;
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
-				transition: color 0.12s;
+				transition: color 0.5s;
 				line-height: 1.4;
+				font-family: "Lato", sans-serif;
 			}
 			.alpha-name:hover {
 				color: var(--dominant);
@@ -161,28 +164,24 @@
 				padding: 14px 36px 16px;
 				display: flex;
 				align-items: center;
-				justify-content: center;
-				gap: 26px;
 				height: 160px;
 				overflow: hidden;
+				position: relative;
 				user-select: none;
 				-webkit-user-select: none;
 				text-align: center;
 			}
 			.db-globe-wrap {
-				flex-shrink: 0;
-				width: 0;
+				position: absolute;
+				left: 160px;
+				top: 50%;
+				transform: translateY(-50%);
+				width: 150px;
 				overflow: hidden;
 				display: flex;
 				flex-direction: column;
 				align-items: center;
 				gap: 4px;
-				opacity: 0;
-				transition: opacity 0.3s ease, width 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-			}
-			#detail-bar.active .db-globe-wrap {
-				width: 150px;
-				opacity: 1;
 			}
 			.db-globe-wrap .coord-globe {
 				width: 120px;
@@ -196,8 +195,14 @@
 				font-family: "Raleway", sans-serif;
 				font-weight: 600;
 				white-space: nowrap;
+				opacity: 0;
+				transition: opacity 0.3s ease;
+			}
+			#detail-bar.active .db-globe-wrap .coord-text {
+				opacity: 1;
 			}
 			.db-body {
+				flex: 1;
 				min-width: 0;
 				text-align: center;
 			}
@@ -208,7 +213,10 @@
 				margin-top: 8px;
 				max-height: 0;
 				overflow: hidden;
-				transition: opacity 0.32s ease, max-height 0.3s ease;
+				transition:
+					opacity 0.08s ease,
+					max-height 0.08s ease,
+					color 0.18s;
 				font-size: 0.78rem;
 				font-family: "Raleway", sans-serif;
 				font-weight: 600;
@@ -221,8 +229,11 @@
 				opacity: 0;
 				pointer-events: none;
 				background-color: var(--dominant);
+			}
+			#detail-bar.active .db-arrow-link {
 				transition:
-					opacity 0.32s ease,
+					opacity 0.32s ease 0.1s,
+					max-height 0.3s ease,
 					color 0.18s;
 			}
 			.db-arrow-link::after {
@@ -248,7 +259,8 @@
 				transition: color 0.2s;
 			}
 			#db-name.placeholder {
-				font-size: 0.9rem;
+				font-size: 1.2rem;
+				margin-top: 20px;
 				font-weight: 400;
 				color: #c8b0a8;
 				font-style: italic;
@@ -316,11 +328,35 @@
 				}
 			}
 			@media (max-width: 640px) {
-				#top-bar { flex-direction: column; height: auto; }
-				#top-left { width: 100%; border-right: none; border-bottom: 1px solid rgba(184,55,38,0.08); padding: 16px; flex-direction: row; align-items: center; justify-content: space-between; }
-				#filter-bar { flex-direction: row; gap: 10px; }
-				#detail-bar { height: 96px; padding: 8px 16px; }
-				#list-view { columns: 2; padding: 6px 14px 0; height: calc(100vh - 260px); }
+				#top-bar {
+					flex-direction: column;
+					height: auto;
+				}
+				#top-left {
+					width: 100%;
+					border-right: none;
+					border-bottom: 1px solid rgba(184, 55, 38, 0.08);
+					padding: 16px;
+					flex-direction: row;
+					align-items: center;
+					justify-content: space-between;
+				}
+				#filter-bar {
+					flex-direction: row;
+					gap: 10px;
+				}
+				#detail-bar {
+					height: 96px;
+					padding: 8px 16px;
+				}
+				.db-globe-wrap {
+					left: 16px;
+				}
+				#list-view {
+					columns: 2;
+					padding: 6px 14px 0;
+					height: calc(100vh - 260px);
+				}
 			}
 		</style>
 	</head>
@@ -452,7 +488,9 @@
 						Wales: [52.13, -3.78],
 					};
 
-					function makeGlobeSVG(lat, lon) {
+					const globeAnim = { lat: 20, lon: 0, targetLat: 20, targetLon: 0, idle: true, gridEl: null, dotEl: null };
+
+					function makeGridPaths(lat, lon) {
 						const r = 0.88;
 						const DEG = Math.PI / 180;
 						const φ0 = lat * DEG,
@@ -493,22 +531,46 @@
 							})
 							.join("");
 
-						const lonLines = [-3, -2, -1, 0, 1, 2]
-							.map((k) => {
-								const λ = λ0 + k * 60 * DEG;
+						const lonLines = Array.from({ length: 12 }, (_, i) => i * 30)
+							.map((deg) => {
+								const λ = deg * DEG;
 								const pts = Array.from({ length: 61 }, (_, i) => [(-90 + i * 3) * DEG, λ]);
-								return gridPath(makePath(pts), k === 0);
+								return gridPath(makePath(pts), deg === 0);
 							})
 							.join("");
 
-						return `<svg class="coord-globe" viewBox="-1 -1 2 2" xmlns="http://www.w3.org/2000/svg">
+						return latLines + lonLines;
+					}
+
+					function initGlobe() {
+						const r = 0.88;
+						dbGlobe.innerHTML = `<svg class="coord-globe" viewBox="-1 -1 2 2" xmlns="http://www.w3.org/2000/svg">
 							<defs><clipPath id="gc"><circle cx="0" cy="0" r="${r}"/></clipPath></defs>
 							<circle cx="0" cy="0" r="${r}" fill="rgba(253,242,241,0.75)"/>
-							<g clip-path="url(#gc)">${latLines}${lonLines}</g>
+							<g id="globe-grid" clip-path="url(#gc)"></g>
 							<circle cx="0" cy="0" r="${r}" fill="none" stroke="rgba(184,55,38,0.45)" stroke-width="0.055"/>
-							<circle cx="0" cy="0" r="0.13" fill="rgba(184,55,38,0.22)"/>
-							<circle cx="0" cy="0" r="0.09" fill="#b83726"/>
-						</svg>`;
+							<g id="globe-dot" opacity="0" style="transition:opacity 0.25s ease">
+								<circle cx="0" cy="0" r="0.13" fill="rgba(184,55,38,0.22)"/>
+								<circle cx="0" cy="0" r="0.09" fill="#b83726"/>
+							</g>
+						</svg><div class="coord-text" id="globe-coord"></div>`;
+						globeAnim.gridEl = document.getElementById("globe-grid");
+						globeAnim.dotEl = document.getElementById("globe-dot");
+
+						(function tick() {
+							if (globeAnim.idle) {
+								globeAnim.lon += 0.2;
+							} else {
+								let dLat = globeAnim.targetLat - globeAnim.lat;
+								let dLon = globeAnim.targetLon - globeAnim.lon;
+								while (dLon > 180) dLon -= 360;
+								while (dLon < -180) dLon += 360;
+								globeAnim.lat += dLat * 0.06;
+								globeAnim.lon += dLon * 0.06;
+							}
+							globeAnim.gridEl.innerHTML = makeGridPaths(globeAnim.lat, globeAnim.lon);
+							requestAnimationFrame(tick);
+						})();
 					}
 
 					function formatCoords(lat, lon) {
@@ -591,11 +653,16 @@
 
 					function showDetail(d) {
 						const coords = COUNTRY_TO_COORDS[d.name];
+						const coordEl = document.getElementById("globe-coord");
 						if (coords) {
 							const [lat, lon] = coords;
-							dbGlobe.innerHTML = makeGlobeSVG(lat, lon) + `<div class="coord-text">${formatCoords(lat, lon)}</div>`;
+							globeAnim.targetLat = lat;
+							globeAnim.targetLon = lon;
+							globeAnim.idle = false;
+							if (globeAnim.dotEl) globeAnim.dotEl.setAttribute("opacity", "1");
+							if (coordEl) coordEl.textContent = formatCoords(lat, lon);
 						} else {
-							dbGlobe.innerHTML = "";
+							if (coordEl) coordEl.textContent = "";
 						}
 						dbName.textContent = d.name;
 						dbName.classList.remove("placeholder");
@@ -609,7 +676,10 @@
 
 					function resetDetail() {
 						if (state && state.selectedId) return;
-						dbGlobe.innerHTML = "";
+						globeAnim.idle = true;
+						if (globeAnim.dotEl) globeAnim.dotEl.setAttribute("opacity", "0");
+						const coordEl = document.getElementById("globe-coord");
+						if (coordEl) coordEl.textContent = "";
 						dbName.textContent = "Hover a country to see details";
 						dbName.classList.add("placeholder");
 						dbCycles.textContent = "";
@@ -734,7 +804,7 @@
 
 						g.each(function (d, i) {
 							const g2 = d3.select(this).append("g").attr("class", "card");
-							g2.style("animation-delay", i * 13 + "ms");
+							g2.style("animation-delay", i * 10 + "ms");
 							if (d.shape === "circle") {
 								g2.append("circle")
 									.attr("r", d.radiusCircle)
@@ -801,6 +871,7 @@
 					});
 					window.addEventListener("resize", renderListView);
 
+					initGlobe();
 					renderListView();
 					runIntro();
 				})
