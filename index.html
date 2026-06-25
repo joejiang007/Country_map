@@ -14,6 +14,7 @@
 			href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap"
 			rel="stylesheet" />
 		<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+		<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 		<style>
 			:root {
 				--dominant: #b83726;
@@ -201,6 +202,20 @@
 			#detail-bar.active .db-globe-wrap .coord-text {
 				opacity: 1;
 			}
+			.db-globe-wrap .continent-text {
+				font-size: 0.72rem;
+				color: #b8a39a;
+				letter-spacing: 0.12em;
+				text-transform: uppercase;
+				font-family: "Raleway", sans-serif;
+				font-weight: 600;
+				white-space: nowrap;
+				opacity: 0;
+				transition: opacity 0.3s ease;
+			}
+			#detail-bar.active .db-globe-wrap .continent-text {
+				opacity: 1;
+			}
 			.db-body {
 				flex: 1;
 				min-width: 0;
@@ -292,41 +307,6 @@
 				background: rgba(184, 55, 38, 0.06);
 			}
 			/* Background ambient nodes */
-			/* Intro overlay */
-			#intro-overlay {
-				position: fixed;
-				inset: 0;
-				background: #fdfdfd;
-				z-index: 500;
-				display: flex;
-				flex-direction: column;
-				transition: opacity 1.4s ease;
-				pointer-events: none;
-			}
-			#intro-overlay.fade-out {
-				opacity: 0;
-			}
-			#intro-viz {
-				flex: 1;
-				width: 100%;
-				overflow: hidden;
-			}
-			/* Node entrance animation — applied to .card inside intro so d3 translate on .node doesn't conflict */
-			#intro-viz .node .card {
-				transform-box: fill-box;
-				transform-origin: center;
-				animation: nodeIn 0.7s backwards cubic-bezier(0.34, 1.56, 0.64, 1);
-			}
-			@keyframes nodeIn {
-				from {
-					opacity: 0;
-					transform: scale(0);
-				}
-				to {
-					opacity: 1;
-					transform: scale(1);
-				}
-			}
 			@media (max-width: 640px) {
 				#top-bar {
 					flex-direction: column;
@@ -388,14 +368,6 @@
 			</div>
 		</div>
 		<div id="list-view"></div>
-
-		<!-- Intro animation overlay -->
-		<div id="intro-overlay">
-			<div class="header">
-				<span class="brand">PIRLS 2026 Participants</span>
-			</div>
-			<div id="intro-viz"></div>
-		</div>
 
 		<script>
 			d3.csv("CountryInfoforMap.csv")
@@ -488,58 +460,302 @@
 						Wales: [52.13, -3.78],
 					};
 
-					const globeAnim = { lat: 20, lon: 0, targetLat: 20, targetLon: 0, idle: true, gridEl: null, dotEl: null };
+					const COUNTRY_TO_CONTINENT = {
+						Albania: "Europe",
+						Australia: "Oceania",
+						Austria: "Europe",
+						Azerbaijan: "Asia",
+						Bahrain: "Asia",
+						"Belgium (Flemish)": "Europe",
+						"Belgium (French)": "Europe",
+						Brazil: "South America",
+						Bulgaria: "Europe",
+						Canada: "North America",
+						"Ontario, Canada": "North America",
+						"Quebec, Canada": "North America",
+						"Chinese Taipei": "Asia",
+						Cyprus: "Asia",
+						"Czech Republic": "Europe",
+						Denmark: "Europe",
+						England: "Europe",
+						Finland: "Europe",
+						France: "Europe",
+						Georgia: "Asia",
+						Germany: "Europe",
+						"Hong Kong SAR": "Asia",
+						Hungary: "Europe",
+						"Iran, Islamic Rep. of": "Asia",
+						Ireland: "Europe",
+						Israel: "Asia",
+						Italy: "Europe",
+						Jordan: "Asia",
+						Kazakhstan: "Asia",
+						"Korea, Rep. of": "Asia",
+						Kuwait: "Asia",
+						Latvia: "Europe",
+						Lithuania: "Europe",
+						"Macao SAR": "Asia",
+						Malta: "Europe",
+						Montenegro: "Europe",
+						Morocco: "Africa",
+						Netherlands: "Europe",
+						"New Zealand": "Oceania",
+						"North Macedonia": "Europe",
+						"Northern Ireland": "Europe",
+						Norway: "Europe",
+						Oman: "Asia",
+						Poland: "Europe",
+						Portugal: "Europe",
+						Qatar: "Asia",
+						Romania: "Europe",
+						"Saudi Arabia": "Asia",
+						"Saudi Arabia (RCJY)": "Asia",
+						Scotland: "Europe",
+						"South Africa": "Africa",
+						Serbia: "Europe",
+						Singapore: "Asia",
+						"Slovak Republic": "Europe",
+						Slovenia: "Europe",
+						Spain: "Europe",
+						Sweden: "Europe",
+						Tajikistan: "Asia",
+						"United Arab Emirates": "Asia",
+						"Abu Dhabi, UAE": "Asia",
+						"Dubai, UAE": "Asia",
+						"Sharjah, UAE": "Asia",
+						Uzbekistan: "Asia",
+						Wales: "Europe",
+					};
 
-					function makeGridPaths(lat, lon) {
-						const r = 0.88;
-						const DEG = Math.PI / 180;
-						const φ0 = lat * DEG,
-							λ0 = lon * DEG;
+					// Maps Natural Earth admin-0 country names (world-atlas topology) to a continent group
+					const CONTINENT_OF_NE = {
+						Algeria: "Africa",
+						Angola: "Africa",
+						Benin: "Africa",
+						Botswana: "Africa",
+						"Burkina Faso": "Africa",
+						Burundi: "Africa",
+						Cameroon: "Africa",
+						"Central African Rep.": "Africa",
+						Chad: "Africa",
+						Congo: "Africa",
+						"Dem. Rep. Congo": "Africa",
+						"Côte d'Ivoire": "Africa",
+						Djibouti: "Africa",
+						Egypt: "Africa",
+						"Eq. Guinea": "Africa",
+						Eritrea: "Africa",
+						Ethiopia: "Africa",
+						Gabon: "Africa",
+						Gambia: "Africa",
+						Ghana: "Africa",
+						Guinea: "Africa",
+						"Guinea-Bissau": "Africa",
+						Kenya: "Africa",
+						Lesotho: "Africa",
+						Liberia: "Africa",
+						Libya: "Africa",
+						Madagascar: "Africa",
+						Malawi: "Africa",
+						Mali: "Africa",
+						Mauritania: "Africa",
+						Morocco: "Africa",
+						Mozambique: "Africa",
+						Namibia: "Africa",
+						Niger: "Africa",
+						Nigeria: "Africa",
+						Rwanda: "Africa",
+						"S. Sudan": "Africa",
+						Senegal: "Africa",
+						"Sierra Leone": "Africa",
+						Somalia: "Africa",
+						Somaliland: "Africa",
+						"South Africa": "Africa",
+						Sudan: "Africa",
+						Tanzania: "Africa",
+						Togo: "Africa",
+						Tunisia: "Africa",
+						Uganda: "Africa",
+						"W. Sahara": "Africa",
+						Zambia: "Africa",
+						Zimbabwe: "Africa",
+						eSwatini: "Africa",
+						Afghanistan: "Asia",
+						Armenia: "Asia",
+						Azerbaijan: "Asia",
+						Bangladesh: "Asia",
+						Bhutan: "Asia",
+						Brunei: "Asia",
+						Cambodia: "Asia",
+						China: "Asia",
+						Cyprus: "Asia",
+						Georgia: "Asia",
+						India: "Asia",
+						Indonesia: "Asia",
+						Iran: "Asia",
+						Iraq: "Asia",
+						Israel: "Asia",
+						Japan: "Asia",
+						Jordan: "Asia",
+						Kazakhstan: "Asia",
+						Kuwait: "Asia",
+						Kyrgyzstan: "Asia",
+						Laos: "Asia",
+						Lebanon: "Asia",
+						Malaysia: "Asia",
+						Mongolia: "Asia",
+						Myanmar: "Asia",
+						"N. Cyprus": "Asia",
+						Nepal: "Asia",
+						"North Korea": "Asia",
+						Oman: "Asia",
+						Pakistan: "Asia",
+						Palestine: "Asia",
+						Philippines: "Asia",
+						Qatar: "Asia",
+						"Saudi Arabia": "Asia",
+						"South Korea": "Asia",
+						"Sri Lanka": "Asia",
+						Syria: "Asia",
+						Taiwan: "Asia",
+						Tajikistan: "Asia",
+						Thailand: "Asia",
+						"Timor-Leste": "Asia",
+						Turkey: "Asia",
+						Turkmenistan: "Asia",
+						"United Arab Emirates": "Asia",
+						Uzbekistan: "Asia",
+						Vietnam: "Asia",
+						Yemen: "Asia",
+						Albania: "Europe",
+						Austria: "Europe",
+						Belarus: "Europe",
+						Belgium: "Europe",
+						"Bosnia and Herz.": "Europe",
+						Bulgaria: "Europe",
+						Croatia: "Europe",
+						Czechia: "Europe",
+						Denmark: "Europe",
+						Estonia: "Europe",
+						Finland: "Europe",
+						France: "Europe",
+						Germany: "Europe",
+						Greece: "Europe",
+						Hungary: "Europe",
+						Iceland: "Europe",
+						Ireland: "Europe",
+						Italy: "Europe",
+						Kosovo: "Europe",
+						Latvia: "Europe",
+						Lithuania: "Europe",
+						Luxembourg: "Europe",
+						Macedonia: "Europe",
+						Moldova: "Europe",
+						Montenegro: "Europe",
+						Netherlands: "Europe",
+						Norway: "Europe",
+						Poland: "Europe",
+						Portugal: "Europe",
+						Romania: "Europe",
+						Russia: "Europe",
+						Serbia: "Europe",
+						Slovakia: "Europe",
+						Slovenia: "Europe",
+						Spain: "Europe",
+						Sweden: "Europe",
+						Switzerland: "Europe",
+						Ukraine: "Europe",
+						"United Kingdom": "Europe",
+						Bahamas: "North America",
+						Belize: "North America",
+						Canada: "North America",
+						"Costa Rica": "North America",
+						Cuba: "North America",
+						"Dominican Rep.": "North America",
+						"El Salvador": "North America",
+						Greenland: "North America",
+						Guatemala: "North America",
+						Haiti: "North America",
+						Honduras: "North America",
+						Jamaica: "North America",
+						Mexico: "North America",
+						Nicaragua: "North America",
+						Panama: "North America",
+						"Puerto Rico": "North America",
+						"Trinidad and Tobago": "North America",
+						"United States of America": "North America",
+						Argentina: "South America",
+						Bolivia: "South America",
+						Brazil: "South America",
+						Chile: "South America",
+						Colombia: "South America",
+						Ecuador: "South America",
+						"Falkland Is.": "South America",
+						Guyana: "South America",
+						Paraguay: "South America",
+						Peru: "South America",
+						Suriname: "South America",
+						Uruguay: "South America",
+						Venezuela: "South America",
+						Australia: "Oceania",
+						Fiji: "Oceania",
+						"New Caledonia": "Oceania",
+						"New Zealand": "Oceania",
+						"Papua New Guinea": "Oceania",
+						"Solomon Is.": "Oceania",
+						Vanuatu: "Oceania",
+						Antarctica: "Antarctica",
+						"Fr. S. Antarctic Lands": "Antarctica",
+					};
 
-						function project(φ, λ) {
-							const dλ = λ - λ0;
-							const x = Math.cos(φ) * Math.sin(dλ);
-							const y = Math.sin(φ) * Math.cos(φ0) - Math.cos(φ) * Math.sin(φ0) * Math.cos(dλ);
-							const z = Math.sin(φ) * Math.sin(φ0) + Math.cos(φ) * Math.cos(φ0) * Math.cos(dλ);
-							return [x * r, -y * r, z];
-						}
+					let CONTINENT_SHAPES = null;
+					d3.json("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json").then((topo) => {
+						const byContinent = {};
+						topo.objects.countries.geometries.forEach((g) => {
+							const continent = CONTINENT_OF_NE[g.properties.name];
+							if (!continent) return;
+							(byContinent[continent] = byContinent[continent] || []).push(g);
+						});
+						CONTINENT_SHAPES = {};
+						Object.keys(byContinent).forEach((continent) => {
+							CONTINENT_SHAPES[continent] = topojson.merge(topo, byContinent[continent]);
+						});
+					});
 
-						function makePath(pts) {
-							let d = "",
-								on = false;
-							for (const [φ, λ] of pts) {
-								const [px, py, z] = project(φ, λ);
-								if (z >= 0) {
-									d += (on ? "L" : "M") + px.toFixed(3) + "," + py.toFixed(3);
-									on = true;
-								} else on = false;
-							}
-							return d;
-						}
+					const globeAnim = {
+						lat: 20,
+						lon: 0,
+						targetLat: 20,
+						targetLon: 0,
+						idle: true,
+						continent: null,
+						gridEl: null,
+						dotEl: null,
+						continentEl: null,
+					};
+					const globeProjection = d3.geoOrthographic().scale(0.88).translate([0, 0]).clipAngle(90);
+					const globePath = d3.geoPath(globeProjection);
 
-						function gridPath(d, strong) {
+					const GRATICULE_LINES = [-60, -30, 0, 30, 60]
+						.map((deg) => ({
+							strong: deg === 0,
+							line: { type: "LineString", coordinates: Array.from({ length: 121 }, (_, i) => [-180 + i * 3, deg]) },
+						}))
+						.concat(
+							Array.from({ length: 12 }, (_, i) => i * 30).map((deg) => ({
+								strong: deg === 0,
+								line: { type: "LineString", coordinates: Array.from({ length: 61 }, (_, i) => [deg, -90 + i * 3]) },
+							})),
+						);
+
+					function makeGridPaths() {
+						return GRATICULE_LINES.map(({ strong, line }) => {
+							const d = globePath(line);
+							if (!d) return "";
 							const a = strong ? 0.3 : 0.16,
 								w = strong ? 0.038 : 0.018;
-							return d ? `<path d="${d}" stroke="rgba(184,55,38,${a})" stroke-width="${w}" fill="none"/>` : "";
-						}
-
-						const latLines = [-60, -30, 0, 30, 60]
-							.map((deg) => {
-								const φ = deg * DEG;
-								const pts = Array.from({ length: 121 }, (_, i) => [φ, (-180 + i * 3) * DEG]);
-								return gridPath(makePath(pts), deg === 0);
-							})
-							.join("");
-
-						const lonLines = Array.from({ length: 12 }, (_, i) => i * 30)
-							.map((deg) => {
-								const λ = deg * DEG;
-								const pts = Array.from({ length: 61 }, (_, i) => [(-90 + i * 3) * DEG, λ]);
-								return gridPath(makePath(pts), deg === 0);
-							})
-							.join("");
-
-						return latLines + lonLines;
+							return `<path d="${d}" stroke="rgba(184,55,38,${a})" stroke-width="${w}" fill="none"/>`;
+						}).join("");
 					}
 
 					function initGlobe() {
@@ -547,15 +763,19 @@
 						dbGlobe.innerHTML = `<svg class="coord-globe" viewBox="-1 -1 2 2" xmlns="http://www.w3.org/2000/svg">
 							<defs><clipPath id="gc"><circle cx="0" cy="0" r="${r}"/></clipPath></defs>
 							<circle cx="0" cy="0" r="${r}" fill="rgba(253,242,241,0.75)"/>
-							<g id="globe-grid" clip-path="url(#gc)"></g>
+							<g clip-path="url(#gc)">
+								<path id="globe-continent" opacity="0" fill="rgba(184,55,38,0.16)" stroke="rgba(184,55,38,0.5)" stroke-width="0.012" style="transition:opacity 0.3s ease"></path>
+								<g id="globe-grid"></g>
+							</g>
 							<circle cx="0" cy="0" r="${r}" fill="none" stroke="rgba(184,55,38,0.45)" stroke-width="0.055"/>
 							<g id="globe-dot" opacity="0" style="transition:opacity 0.25s ease">
 								<circle cx="0" cy="0" r="0.13" fill="rgba(184,55,38,0.22)"/>
 								<circle cx="0" cy="0" r="0.09" fill="#b83726"/>
 							</g>
-						</svg><div class="coord-text" id="globe-coord"></div>`;
+						</svg><div class="coord-text" id="globe-coord"></div><div class="continent-text" id="globe-continent-label"></div>`;
 						globeAnim.gridEl = document.getElementById("globe-grid");
 						globeAnim.dotEl = document.getElementById("globe-dot");
+						globeAnim.continentEl = document.getElementById("globe-continent");
 
 						(function tick() {
 							if (globeAnim.idle) {
@@ -568,7 +788,10 @@
 								globeAnim.lat += dLat * 0.06;
 								globeAnim.lon += dLon * 0.06;
 							}
-							globeAnim.gridEl.innerHTML = makeGridPaths(globeAnim.lat, globeAnim.lon);
+							globeProjection.rotate([-globeAnim.lon, -globeAnim.lat]);
+							globeAnim.gridEl.innerHTML = makeGridPaths();
+							const shape = globeAnim.continent && CONTINENT_SHAPES ? CONTINENT_SHAPES[globeAnim.continent] : null;
+							globeAnim.continentEl.setAttribute("d", shape ? globePath(shape) || "" : "");
 							requestAnimationFrame(tick);
 						})();
 					}
@@ -654,15 +877,20 @@
 					function showDetail(d) {
 						const coords = COUNTRY_TO_COORDS[d.name];
 						const coordEl = document.getElementById("globe-coord");
+						const continentEl = document.getElementById("globe-continent-label");
 						if (coords) {
 							const [lat, lon] = coords;
 							globeAnim.targetLat = lat;
 							globeAnim.targetLon = lon;
 							globeAnim.idle = false;
+							globeAnim.continent = COUNTRY_TO_CONTINENT[d.name] || null;
 							if (globeAnim.dotEl) globeAnim.dotEl.setAttribute("opacity", "1");
+							if (globeAnim.continentEl) globeAnim.continentEl.setAttribute("opacity", globeAnim.continent ? "1" : "0");
 							if (coordEl) coordEl.textContent = formatCoords(lat, lon);
+							if (continentEl) continentEl.textContent = globeAnim.continent || "";
 						} else {
 							if (coordEl) coordEl.textContent = "";
+							if (continentEl) continentEl.textContent = "";
 						}
 						dbName.textContent = d.name;
 						dbName.classList.remove("placeholder");
@@ -678,8 +906,11 @@
 						if (state && state.selectedId) return;
 						globeAnim.idle = true;
 						if (globeAnim.dotEl) globeAnim.dotEl.setAttribute("opacity", "0");
+						if (globeAnim.continentEl) globeAnim.continentEl.setAttribute("opacity", "0");
 						const coordEl = document.getElementById("globe-coord");
 						if (coordEl) coordEl.textContent = "";
+						const continentEl = document.getElementById("globe-continent-label");
+						if (continentEl) continentEl.textContent = "";
 						dbName.textContent = "Hover a country to see details";
 						dbName.classList.add("placeholder");
 						dbCycles.textContent = "";
@@ -770,97 +1001,6 @@
 						}
 					});
 
-					function runIntro() {
-						const overlay = document.getElementById("intro-overlay");
-						const el = document.getElementById("intro-viz");
-						const w = window.innerWidth;
-						const headerH = overlay.querySelector(".header").getBoundingClientRect().height;
-						const h = window.innerHeight - headerH;
-
-						const nodes = DATA.map((d) => {
-							const shape = shapeFor(d);
-							const r = nodeRadius(d);
-							const cs = cardSize();
-							return {
-								...d,
-								shape,
-								radius: shape === "card" ? Math.max(cs.w, cs.h) / 2 + 2 : r + 2,
-								cardW: cs.w,
-								cardH: cs.h,
-								radiusCircle: r,
-								x: w / 2 + (Math.random() - 0.5) * w * 0.4,
-								y: h / 2 + (Math.random() - 0.5) * h * 0.35,
-							};
-						});
-
-						const svg = d3.select("#intro-viz").append("svg").attr("width", w).attr("height", h);
-
-						const g = svg
-							.selectAll("g.node")
-							.data(nodes)
-							.join("g")
-							.attr("class", "node")
-							.attr("transform", (d) => `translate(${d.x},${d.y})`);
-
-						g.each(function (d, i) {
-							const g2 = d3.select(this).append("g").attr("class", "card");
-							g2.style("animation-delay", i * 10 + "ms");
-							if (d.shape === "circle") {
-								g2.append("circle")
-									.attr("r", d.radiusCircle)
-									.attr("fill", fillFor(d))
-									.attr("stroke", "rgba(184,55,38,0.2)")
-									.attr("stroke-width", 1);
-								drawNodeLabel(g2, d.name, { fontSize: 12, maxCharsPerLine: 9, maxLines: 3, lineHeight: 1.05 });
-							} else {
-								const w2 = d.cardW / 2,
-									h2 = d.cardH / 2;
-								g2.append("rect")
-									.attr("x", -w2)
-									.attr("y", -h2)
-									.attr("width", d.cardW)
-									.attr("height", d.cardH)
-									.attr("rx", 8)
-									.attr("ry", 8)
-									.attr("fill", fillFor(d))
-									.attr("stroke", "rgba(184,55,38,0.2)")
-									.attr("stroke-width", 1);
-								drawNodeLabel(g2, d.name, { fontSize: 12, maxCharsPerLine: 16, maxLines: 2, lineHeight: 1.05 });
-							}
-						});
-
-						const introSim = d3
-							.forceSimulation(nodes)
-							.velocityDecay(0.7)
-							.alphaDecay(0.05)
-							.force(
-								"collide",
-								d3
-									.forceCollide()
-									.radius((d) => d.radius)
-									.iterations(2),
-							)
-							.force("x", d3.forceX(w / 2).strength(0.02))
-							.force("y", d3.forceY(h / 2).strength(0.1))
-							.on("tick", () => {
-								g.attr("transform", (d) => {
-									d.x = Math.max(d.radius, Math.min(w - d.radius, d.x));
-									d.y = Math.max(d.radius, Math.min(h - d.radius, d.y));
-									return `translate(${d.x},${d.y})`;
-								});
-							});
-
-						// hold until last node has fully animated in, then fade out
-						const holdMs = DATA.length * 13 + 1400;
-						setTimeout(() => {
-							overlay.classList.add("fade-out");
-							setTimeout(() => {
-								introSim.stop();
-								overlay.style.display = "none";
-							}, 1500);
-						}, holdMs);
-					}
-
 					document.getElementById("cycle-filter").addEventListener("change", (e) => {
 						state.cycleFilter = e.target.value;
 						renderListView();
@@ -873,7 +1013,6 @@
 
 					initGlobe();
 					renderListView();
-					runIntro();
 				})
 				.catch(function (err) {
 					console.error("Failed to load CountryInfoforMap.csv:", err);
