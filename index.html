@@ -44,8 +44,7 @@
 				padding: 28px 32px 24px;
 				border-right: 1px solid rgba(184, 55, 38, 0.08);
 				display: flex;
-				flex-direction: column;
-				justify-content: space-between;
+				align-items: center;
 			}
 			.brand {
 				color: var(--dominant);
@@ -59,27 +58,36 @@
 			}
 			#filter-bar {
 				display: flex;
-				flex-direction: column;
-				gap: 10px;
+				align-items: center;
+				gap: 20px;
+				padding: 14px 28px;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.1);
 				user-select: none;
 				-webkit-user-select: none;
 			}
 			#filter-bar select,
 			#filter-bar input#search {
-				width: 100%;
 				border: none;
 				border-bottom: 1px solid rgba(184, 55, 38, 0.18);
 				border-radius: 0;
 				background: transparent;
 				font-family: "Raleway", sans-serif;
-				font-size: 0.76rem;
+				font-size: 0.8rem;
 				font-weight: 600;
 				letter-spacing: 0.03em;
 				color: #666;
-				padding: 3px 2px 4px;
+				padding: 4px 2px 6px;
 				appearance: none;
 				-webkit-appearance: none;
 				cursor: pointer;
+			}
+			#filter-bar select {
+				flex-shrink: 0;
+			}
+			#filter-bar input#search {
+				flex: 1;
+				max-width: 280px;
+				cursor: text;
 			}
 			#filter-bar select:focus,
 			#filter-bar input#search:focus {
@@ -87,39 +95,33 @@
 				border-bottom-color: var(--dominant);
 				color: #2a1a17;
 			}
-			#filter-bar input#search {
-				cursor: text;
-			}
 			#filter-bar input#search::placeholder {
 				color: #b8a09a;
 				font-weight: 400;
 			}
+			#list-count {
+				margin-left: auto;
+				font-family: "Raleway", sans-serif;
+				font-size: 0.72rem;
+				font-weight: 600;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				color: #b8a09a;
+				white-space: nowrap;
+			}
 			#list-view {
-				height: calc(100vh - 244px);
+				height: calc(100vh - 288px);
 				overflow-x: auto;
 				overflow-y: hidden;
 				columns: 6;
 				column-gap: 20px;
-				padding: 6px 28px 0;
+				padding: 10px 28px 0;
 				box-sizing: border-box;
 			}
-			.alpha-section {
-				margin-bottom: 8px;
-				break-inside: avoid-column;
-			}
-			.alpha-letter {
-				font-size: 1rem;
-				font-weight: 700;
-				letter-spacing: 0.15em;
-				text-transform: uppercase;
-				color: #b8a09a;
-				padding: 6px 0 3px;
-				margin-bottom: 1px;
-				break-after: avoid;
-			}
 			.alpha-row {
-				padding: 2px 5px;
-				border-radius: 4px;
+				padding: 6px 8px;
+				border-radius: 6px;
+				border-bottom: 1px solid rgba(184, 55, 38, 0.06);
 				break-inside: avoid;
 				cursor: default;
 			}
@@ -317,13 +319,16 @@
 					border-right: none;
 					border-bottom: 1px solid rgba(184, 55, 38, 0.08);
 					padding: 16px;
-					flex-direction: row;
-					align-items: center;
-					justify-content: space-between;
 				}
 				#filter-bar {
-					flex-direction: row;
+					padding: 10px 14px;
+					flex-wrap: wrap;
 					gap: 10px;
+				}
+				#list-count {
+					margin-left: 0;
+					width: 100%;
+					order: 3;
 				}
 				#detail-bar {
 					height: 96px;
@@ -335,7 +340,7 @@
 				#list-view {
 					columns: 2;
 					padding: 6px 14px 0;
-					height: calc(100vh - 260px);
+					height: calc(100vh - 300px);
 				}
 			}
 		</style>
@@ -345,17 +350,6 @@
 		<div id="top-bar">
 			<div id="top-left">
 				<div class="brand">PIRLS 2026 Participants</div>
-				<div id="filter-bar">
-					<select id="cycle-filter">
-						<option value="all">All Cycles</option>
-						<option value="P21">PIRLS 2021</option>
-						<option value="P16">PIRLS 2016</option>
-						<option value="P11">PIRLS 2011</option>
-						<option value="P06">PIRLS 2006</option>
-						<option value="P01">PIRLS 2001</option>
-					</select>
-					<input type="text" id="search" placeholder="Search countries…" />
-				</div>
 			</div>
 			<div id="detail-bar">
 				<div class="db-globe-wrap" id="db-globe"></div>
@@ -366,6 +360,18 @@
 					<a id="db-link" href="#" class="db-arrow-link" aria-label="Go to country page">Country Chapter</a>
 				</div>
 			</div>
+		</div>
+		<div id="filter-bar">
+			<select id="cycle-filter">
+				<option value="all">All Cycles</option>
+				<option value="P21">PIRLS 2021</option>
+				<option value="P16">PIRLS 2016</option>
+				<option value="P11">PIRLS 2011</option>
+				<option value="P06">PIRLS 2006</option>
+				<option value="P01">PIRLS 2001</option>
+			</select>
+			<input type="text" id="search" placeholder="Search countries…" />
+			<span id="list-count"></span>
 		</div>
 		<div id="list-view"></div>
 
@@ -384,6 +390,7 @@
 						return {
 							id: r.Country.replace(/\s+/g, "-").replace(/[(),]/g, ""),
 							name: r.Country,
+							benchmarker: (r["Benchmarker"] || "").trim() === "X",
 							cycles,
 							cycleCount: cycles.length,
 							languages,
@@ -939,30 +946,22 @@
 
 					function renderListView() {
 						const listEl = document.getElementById("list-view");
-						const list = filteredData().sort((a, b) => a.name.localeCompare(b.name));
+						const byName = (a, b) => a.name.localeCompare(b.name);
+						const all = filteredData();
+						const list = all.filter((d) => !d.benchmarker).sort(byName).concat(all.filter((d) => d.benchmarker).sort(byName));
+
+						const countEl = document.getElementById("list-count");
+						if (countEl) countEl.textContent = list.length + (list.length === 1 ? " participant" : " participants");
 
 						if (!list.length) {
 							listEl.innerHTML = '<div class="alpha-empty">No countries match the current filter.</div>';
 							return;
 						}
 
-						const groups = {};
-						list.forEach((d) => {
-							const letter = d.name[0].toUpperCase();
-							if (!groups[letter]) groups[letter] = [];
-							groups[letter].push(d);
-						});
-
-						listEl.innerHTML = Object.keys(groups)
-							.sort()
-							.map((letter) => {
-								const rows = groups[letter]
-									.map((d) => {
-										const sel = d.id === state.selectedId ? " selected" : "";
-										return `<div class="alpha-row${sel}" data-id="${escapeHtml(d.id)}"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a></div>`;
-									})
-									.join("");
-								return `<div class="alpha-section"><div class="alpha-letter">${letter}</div>${rows}</div>`;
+						listEl.innerHTML = list
+							.map((d) => {
+								const sel = d.id === state.selectedId ? " selected" : "";
+								return `<div class="alpha-row${sel}" data-id="${escapeHtml(d.id)}"><a class="alpha-name" href="#">${escapeHtml(d.name)}</a></div>`;
 							})
 							.join("");
 
